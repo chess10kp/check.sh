@@ -33,7 +33,8 @@ export async function streamGame(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  return fetch(`${LICHESS_API_URL}/broadcast/round/${broadcastRoundId}/games`, {
+  // API requires tournament slug, round slug, and round ID. Slugs can be replaced with '-' when unknown.
+  return fetch(`${LICHESS_API_URL}/broadcast/-/-/${broadcastRoundId}`, {
     headers,
   });
 }

@@ -6,9 +6,11 @@ import { defaultTheme } from '../lib/themes';
 
 interface BroadcastListProps {
   onSelectGame: (game: any) => void;
+  onFetchGames: (roundId: string) => void;
+  loadingGames?: boolean;
 }
 
-export default function BroadcastList({ onSelectGame }: BroadcastListProps) {
+export default function BroadcastList({ onSelectGame, onFetchGames, loadingGames }: BroadcastListProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { broadcasts, loading, error, refresh } = useBroadcasts();
 
@@ -21,14 +23,19 @@ export default function BroadcastList({ onSelectGame }: BroadcastListProps) {
       setSelectedIndex(i => Math.max(0, i - 1));
     } else if (key.downArrow || input === 'j') {
       setSelectedIndex(i => Math.min(broadcasts.length - 1, i + 1));
-    } else if (key.return || input === ' ') {
+    } else if (key.return) {
+      if (broadcasts.length === 0) {
+        return;
+      }
+      
       const selected = broadcasts[selectedIndex];
+      
       if (selected && selected.rounds && selected.rounds.length > 0) {
         const round = selected.rounds[0];
-        if (round.games && round.games.length > 0) {
-          onSelectGame(round.games[0]);
-        }
+        onFetchGames(round.id);
       }
+    } else if (key.escape) {
+      process.exit(0);
     } else if (input === 'r') {
       refresh();
     } else if (input === 'q') {
@@ -36,10 +43,10 @@ export default function BroadcastList({ onSelectGame }: BroadcastListProps) {
     }
   });
 
-  if (loading) {
+  if (loading || loadingGames) {
     return (
       <Box justifyContent="center" padding={2}>
-        <Text color="yellow">Loading broadcasts...</Text>
+        <Text color="yellow">{loading ? 'Loading broadcasts...' : 'Loading games...'}</Text>
       </Box>
     );
   }
@@ -67,7 +74,7 @@ export default function BroadcastList({ onSelectGame }: BroadcastListProps) {
       ))}
       <Box marginTop={1}>
         <Text color="gray">
-          [↑/k] Up  [↓/j] Down  [Enter] Select  [r] Refresh  [q] Quit
+          [↑/k] Up  [↓/j] Down  [Enter] Fetch Games  [r] Refresh  [q/Esc] Quit
         </Text>
       </Box>
     </Box>

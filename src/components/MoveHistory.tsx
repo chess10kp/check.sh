@@ -2,10 +2,19 @@ import React from 'react';
 import { Box, Text } from 'ink';
 
 interface MoveHistoryProps {
-  moves: string;
+  moves?: string;
 }
 
 export default function MoveHistory({ moves }: MoveHistoryProps) {
+  if (!moves) {
+    return (
+      <Box flexDirection="column" borderStyle="single" paddingX={1}>
+        <Text bold color="gray">Move History:</Text>
+        <Text color="gray">No moves yet</Text>
+      </Box>
+    );
+  }
+
   const movePairs = parsePGN(moves);
 
   return (

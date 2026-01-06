@@ -20,28 +20,25 @@ export interface BroadcastRound {
   games: Game[];
 }
 
-export interface Player {
-  id: string;
-  username: string;
+export interface BroadcastPlayer {
+  name: string;
   title?: "GM" | "IM" | "FM" | "WGM" | "WIM" | "WFM" | "NM" | "CM" | "WCM";
   rating: number;
-  clock?: {
-    white: number;
-    black: number;
-  };
+  clock?: number;
+  team?: string;
+  fideId?: number;
+  fed?: string;
 }
 
 export interface Game {
   id: string;
-  white: Player;
-  black: Player;
-  status: GameStatus;
-  moves: string; // PGN notation
+  name: string;
   fen: string;
-  lastMove?: {
-    from: string;
-    to: string;
-  };
+  players: BroadcastPlayer[];
+  status: GameStatus;
+  moves?: string; // PGN notation - may be undefined for starting position
+  lastMove?: string;
+  thinkTime?: number;
 }
 
 export type GameStatus =

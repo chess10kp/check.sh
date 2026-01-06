@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Box, Text, useInput } from 'ink';
-import { useLichessStream } from '../hooks/useLichessStream';
-import { streamGame } from '../lib/lichess-api';
 import ChessBoard from './ChessBoard';
 import PlayerInfo from './PlayerInfo';
 import MoveHistory from './MoveHistory';
@@ -14,10 +12,14 @@ interface GameViewProps {
 }
 
 export default function GameView({ game, onBack }: GameViewProps) {
-  const { data: streamData } = useLichessStream(
-    `https://lichess.org/api/broadcast/round/${game.id}/games`,
-    process.env.LICHESS_TOKEN
-  );
+  console.log('[GameView] Game data:', JSON.stringify(game, null, 2));
+  console.log('[GameView] FEN:', game.fen, 'Type:', typeof game.fen);
+  console.log('[GameView] Has FEN?', !!game.fen);
+  console.log('[GameView] Game ID:', game.id);
+  console.log('[GameView] Players:', game.players?.length);
+
+  const whitePlayer = game.players[0];
+  const blackPlayer = game.players[1];
 
   useInput((input) => {
     if (input === 'q') {
@@ -28,25 +30,29 @@ export default function GameView({ game, onBack }: GameViewProps) {
   return (
     <Box flexDirection="column">
       <Box borderStyle="single" paddingX={1} marginBottom={1}>
-        <Text bold color={defaultTheme.accent}>Tournament Game</Text>
+        <Text bold color={defaultTheme.accent}>{game.name}</Text>
       </Box>
 
       <Box flexDirection="row">
         <Box paddingRight={2}>
-          <ChessBoard fen={game.fen} lastMove={game.lastMove} />
+          <ChessBoard fen={game.fen} lastMove={game.lastMove ? { from: game.lastMove.substring(0, 2), to: game.lastMove.substring(2, 4) } : undefined} />
         </Box>
 
         <Box flexDirection="column" width={40}>
-          <PlayerInfo
-            player={game.white}
-            isWhite={true}
-            isActive={game.status === 'playing'}
-          />
-          <PlayerInfo
-            player={game.black}
-            isWhite={false}
-            isActive={game.status === 'playing'}
-          />
+          {whitePlayer && (
+            <PlayerInfo
+              player={whitePlayer}
+              isWhite={true}
+              isActive={game.status === 'playing'}
+            />
+          )}
+          {blackPlayer && (
+            <PlayerInfo
+              player={blackPlayer}
+              isWhite={false}
+              isActive={game.status === 'playing'}
+            />
+          )}
 
           <Box marginTop={1}>
             <MoveHistory moves={game.moves} />

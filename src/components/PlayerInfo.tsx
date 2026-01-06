@@ -1,10 +1,10 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import { Player } from '../types';
+import { BroadcastPlayer } from '../types';
 import { defaultTheme } from '../lib/themes';
 
 interface PlayerInfoProps {
-  player: Player;
+  player: BroadcastPlayer;
   isWhite: boolean;
   isActive: boolean;
 }
@@ -14,14 +14,14 @@ export default function PlayerInfo({ player, isWhite, isActive }: PlayerInfoProp
     <Box flexDirection="column" marginBottom={1}>
       <Box flexDirection="row">
         <Text color={isWhite ? defaultTheme.pieceWhite : defaultTheme.pieceBlack}>
-          {isWhite ? '⬜' : '⬛'} {player.title || ''} {player.username}
+          {isWhite ? '⬜' : '⬛'} {player.title || ''} {player.name}
         </Text>
         <Text color="gray"> ({player.rating})</Text>
       </Box>
-      {player.clock && (
+      {player.clock !== undefined && (
         <Box paddingLeft={2}>
           <Text color={isActive ? 'yellow' : 'gray'}>
-            ⏱️ {formatClock(player.clock[isWhite ? 'white' : 'black'])}
+            ⏱️ {formatClock(player.clock)}
           </Text>
         </Box>
       )}
