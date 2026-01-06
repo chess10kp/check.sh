@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, Text } from 'ink';
 import { getPieceSymbol } from '../lib/pieces';
 import { rgbToInkColor, defaultTheme } from '../lib/themes';
+
+const CELL_WIDTH = 8;
 
 interface ChessBoardProps {
   fen: string;
@@ -14,17 +16,19 @@ interface Square {
 }
 
 export default function ChessBoard({ fen, lastMove }: ChessBoardProps) {
+  const terminalHeight = process.stdout.rows || 24;
+
+  const pieceSize = useMemo(() => {
+    const SMALL_TERMINAL_THRESHOLD = 24;
+    return terminalHeight < SMALL_TERMINAL_THRESHOLD ? 'small' : 'compact';
+  }, [terminalHeight]);
+
   const effectiveFen = fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-  console.log('[ChessBoard] Rendering with FEN:', effectiveFen);
   const squares = parseFenToSquares(effectiveFen);
-  console.log('[ChessBoard] Parsed squares:', squares.length, 'rows');
 
   return (
     <Box flexDirection="column">
       {squares.map((row, rankIndex) => {
-        const pieceCount = row.filter(s => s.piece !== null).length;
-        console.log(`[ChessBoard Render] Row ${rankIndex} (${8-rankIndex}): ${pieceCount} pieces`);
-
         return (
           <Box key={`rank-${rankIndex}`} flexDirection="row">
             <Box width={1} justifyContent="center">
@@ -37,14 +41,12 @@ export default function ChessBoard({ fen, lastMove }: ChessBoardProps) {
             const isLastMove = lastMove && (lastMove.from === square.position || lastMove.to === square.position);
 
             const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
-            const symbol = square.piece ? getPieceSymbol(square.piece.color, square.piece.type) : ' ';
-
-            console.log(`[Render Square] ${square.position}: piece=${square.piece ? `${square.piece.color} ${square.piece.type}` : 'empty'}, symbol=${symbol}, color=${pieceColor}`);
+            const symbol = square.piece ? getPieceSymbol(square.piece.color, square.piece.type, pieceSize) : ' ';
 
             return (
               <Box
                 key={`${file}${8 - rankIndex}`}
-                width={3}
+                width={CELL_WIDTH}
                 justifyContent="center"
                 backgroundColor={isLastMove ? defaultTheme.highlight : bgColor}
               >
@@ -60,7 +62,7 @@ export default function ChessBoard({ fen, lastMove }: ChessBoardProps) {
       <Box flexDirection="row">
         <Box width={1} />
         {'abcdefgh'.split('').map(file => (
-          <Box key={file} width={3} justifyContent="center">
+          <Box key={file} width={CELL_WIDTH} justifyContent="center">
             <Text color="gray">{file}</Text>
           </Box>
         ))}
@@ -70,15 +72,12 @@ export default function ChessBoard({ fen, lastMove }: ChessBoardProps) {
 }
 
 function parseFenToSquares(fen: string): Square[][] {
-  console.log('[parseFenToSquares] Input FEN:', fen);
   const boardState = fen.split(' ')[0];
   const rows = boardState.split('/');
-  console.log('[parseFenToSquares] Split into rows:', rows.length);
 
   const result = rows.map((row, rowIndex) => {
     const squares: Square[] = [];
     let fileIndex = 0;
-    console.log(`[parseFenToSquares] Row ${rowIndex} (${row}):`);
 
     for (const char of row) {
       if (/\d/.test(char)) {
@@ -95,11 +94,9 @@ function parseFenToSquares(fen: string): Square[][] {
         fileIndex++;
       }
     }
-    console.log(`[parseFenToSquares] Row ${rowIndex} parsed to ${squares.length} squares`);
     return squares;
   });
 
-  console.log('[parseFenToSquares] Total squares:', result.length, 'x', result[0]?.length);
   return result;
 }
 
@@ -115,7 +112,6 @@ function parsePieceChar(char: string) {
     'p': 'pawn',
   };
   const type = typeMap[pieceChar] || 'pawn';
-  console.log(`[parsePieceChar] Char '${char}' -> color: ${color}, type: ${type}`);
   return { color, type };
 }
 

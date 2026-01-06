@@ -12,12 +12,6 @@ interface GameViewProps {
 }
 
 export default function GameView({ game, onBack }: GameViewProps) {
-  console.log('[GameView] Game data:', JSON.stringify(game, null, 2));
-  console.log('[GameView] FEN:', game.fen, 'Type:', typeof game.fen);
-  console.log('[GameView] Has FEN?', !!game.fen);
-  console.log('[GameView] Game ID:', game.id);
-  console.log('[GameView] Players:', game.players?.length);
-
   const whitePlayer = game.players[0];
   const blackPlayer = game.players[1];
 
