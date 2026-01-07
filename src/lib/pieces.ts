@@ -23,18 +23,18 @@ export const PIECE_SYMBOLS: Record<PieceColor, Record<PieceType, string>> = {
 
 export const COMPACT_PIECES: Record<PieceColor, Record<PieceType, string>> = {
   white: {
-    king: '\n ✚\n ███',
-    queen: '\n ◈\n ███',
+    king: '\n    ✚   \n   ███  ',
+    queen: '\n    ◈   \n   ███  ',
     rook: '\n ▙█▟\n ███',
-    bishop: '\n ⭘\n ███',
+    bishop: '\n    ⭘   \n   ███  ',
     knight: '\n▞█▙\n ██',
     pawn: '\n ▟▙\n ██',
   },
   black: {
-    king: '\n ✚\n ███',
-    queen: '\n ◈\n ███',
+    king: '\n    ✚   \n   ███  ',
+    queen: '\n    ◈   \n   ███  ',
     rook: '\n ▙█▟\n ███',
-    bishop: '\n ⭘\n ███',
+    bishop: '\n    ⭘   \n   ███  ',
     knight: '\n▞█▙\n ██',
     pawn: '\n ▟▙\n ██',
   },

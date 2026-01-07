@@ -1,4 +1,5 @@
-import { readNdjsonStream } from './ndjson-parser';
+import { readNdjsonStream } from './ndjson-parser.js';
+import { BroadcastRound } from '../types/index.js';
 
 const LICHESS_API_URL = 'https://lichess.org/api';
 
@@ -10,6 +11,7 @@ export async function fetchBroadcasts(token?: string): Promise<any[]> {
 
   const response = await fetch(`${LICHESS_API_URL}/broadcast`, {
     headers,
+    cache: 'no-store',
   });
 
   if (!response.ok) {
@@ -24,17 +26,77 @@ export async function fetchBroadcasts(token?: string): Promise<any[]> {
   return broadcasts;
 }
 
-export async function streamGame(
-  broadcastRoundId: string,
+export async function fetchBroadcastRounds(
+  broadcastId: string,
   token?: string
-): Promise<Response> {
+): Promise<BroadcastRound[]> {
   const headers: HeadersInit = {};
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  // API requires tournament slug, round slug, and round ID. Slugs can be replaced with '-' when unknown.
-  return fetch(`${LICHESS_API_URL}/broadcast/-/-/${broadcastRoundId}`, {
+  const response = await fetch(`${LICHESS_API_URL}/broadcast/${broadcastId}`, {
+    headers,
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch broadcast rounds: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.rounds || [];
+}
+
+export async function streamRoundPGN(
+  roundId: string,
+  onUpdate: (pgn: string) => void,
+  token?: string
+): Promise<void> {
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${LICHESS_API_URL}/stream/broadcast/round/${roundId}.pgn`, {
     headers,
   });
+
+  if (!response.ok) {
+    throw new Error(`Failed to stream round PGN: ${response.status}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error('No reader available');
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.trim()) {
+          onUpdate(line);
+        }
+      }
+    }
+
+    if (buffer.trim()) {
+      onUpdate(buffer);
+    }
+  } finally {
+    reader.releaseLock();
+  }
 }

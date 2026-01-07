@@ -16,8 +16,10 @@ export interface Broadcast {
 export interface BroadcastRound {
   id: string;
   name: string;
-  url: string;
-  games: Game[];
+  slug?: string;
+  url?: string;
+  startsAt?: number;
+  finished?: boolean;
 }
 
 export interface BroadcastPlayer {
@@ -31,14 +33,17 @@ export interface BroadcastPlayer {
 }
 
 export interface Game {
-  id: string;
-  name: string;
-  fen: string;
+  id?: string;
+  name?: string;
+  fen?: string;
   players: BroadcastPlayer[];
-  status: GameStatus;
-  moves?: string; // PGN notation - may be undefined for starting position
+  status?: GameStatus;
+  moves?: string;
   lastMove?: string;
   thinkTime?: number;
+  whiteClock?: number;
+  blackClock?: number;
+  pgn?: string;
 }
 
 export type GameStatus =
@@ -52,7 +57,7 @@ export type GameStatus =
   | "timeout"
   | "outoftime";
 
-export type ViewState = "broadcast-list" | "game-view";
+export type ViewState = "broadcast-list" | "rounds-list" | "games-list" | "game-view";
 
 export interface ErrorState {
   message: string;

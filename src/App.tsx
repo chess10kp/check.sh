@@ -1,49 +1,57 @@
 import { useState } from 'react';
 import { Box, Text } from 'ink';
-import BroadcastList from './components/BroadcastList';
-import GameView from './components/GameView';
-import { ViewState } from './types';
-import { streamGame } from './lib/lichess-api';
+import BroadcastList from './components/BroadcastList.js';
+import RoundsList from './components/RoundsList.js';
+import GamesList from './components/GamesList.js';
+import GameView from './components/GameView.js';
+import { ViewState, Broadcast, Game } from './types/index.js';
+import { streamRoundPGN } from './lib/lichess-api.js';
+import { parsePGN } from './lib/pgn-parser.js';
 
 export default function App() {
   const [viewState, setViewState] = useState<ViewState>('broadcast-list');
-  const [selectedGame, setSelectedGame] = useState<any>(null);
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [loadingGames, setLoadingGames] = useState(false);
+  const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
+  const [games, setGames] = useState<Game[]>([]);
+  const [roundName, setRoundName] = useState<string>('');
 
-  const handleSelectGame = (game: any) => {
+  const handleBackToList = () => {
+    setSelectedGame(null);
+    setSelectedBroadcast(null);
+    setViewState('broadcast-list');
+  };
+
+  const handleSelectBroadcast = (broadcast: Broadcast) => {
+    setSelectedBroadcast(broadcast);
+    setViewState('rounds-list');
+  };
+
+  const handleBackToRounds = () => {
+    setSelectedGame(null);
+    setGames([]);
+    setViewState('rounds-list');
+  };
+
+  const handleSelectGame = (game: Game) => {
     setSelectedGame(game);
     setViewState('game-view');
   };
 
-  const handleBackToList = () => {
-    setSelectedGame(null);
-    setViewState('broadcast-list');
-  };
-
-  const handleFetchGames = async (roundId: string) => {
+  const handleSelectRound = async (round: any) => {
     setLoadingGames(true);
+    setRoundName(round.name);
 
     try {
-      const response = await streamGame(roundId);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: { games?: any[] } = await response.json();
-      const games = data.games || [];
-
-      if (games.length === 0) {
-        console.error('No games found in broadcast round:', roundId);
-      } else {
-        console.log('Successfully fetched', games.length, 'games');
-      }
-
-      if (games.length > 0) {
-        handleSelectGame(games[0]);
-      }
+      await streamRoundPGN(round.id, (pgn: string) => {
+        const parsedGames = parsePGN(pgn);
+        if (parsedGames.length > 0) {
+          setGames(parsedGames);
+          setViewState('games-list');
+        }
+      });
     } catch (err: any) {
-      console.error('Error fetching games:', err.message);
+      console.error('Error streaming PGN:', err.message);
     } finally {
       setLoadingGames(false);
     }
@@ -58,21 +66,19 @@ export default function App() {
       </Box>
 
       {viewState === 'broadcast-list' ? (
-        <>
-          {loadingGames ? (
-            <Box justifyContent="center" padding={2}>
-              <Text color="yellow">Loading games...</Text>
-            </Box>
-          ) : (
-            <BroadcastList
-              onSelectGame={handleSelectGame}
-              onFetchGames={handleFetchGames}
-              loadingGames={loadingGames}
-            />
-          )}
-        </>
+        <BroadcastList
+          onSelectBroadcast={handleSelectBroadcast}
+          loadingGames={loadingGames}
+        />
+      ) : viewState === 'rounds-list' && selectedBroadcast ? (
+        <RoundsList
+          broadcastId={selectedBroadcast.tour.id}
+          broadcastName={selectedBroadcast.tour.name}
+          onSelectRound={handleSelectRound}
+          onBack={handleBackToList}
+        />
       ) : (
-        <GameView game={selectedGame} onBack={handleBackToList} />
+        <GameView game={selectedGame} onBack={handleBackToRounds} />
       )}
     </Box>
   );

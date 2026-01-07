@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { useBroadcasts } from '../hooks/useBroadcasts';
-import { Broadcast } from '../types';
-import { defaultTheme } from '../lib/themes';
+import { Broadcast } from '../types/index.js';
+import { defaultTheme } from '../lib/themes.js';
 
 interface BroadcastListProps {
-  onSelectGame: (game: any) => void;
-  onFetchGames: (roundId: string) => void;
+  onSelectBroadcast: (broadcast: Broadcast) => void;
   loadingGames?: boolean;
 }
 
-export default function BroadcastList({ onSelectGame, onFetchGames, loadingGames }: BroadcastListProps) {
+export default function BroadcastList({ onSelectBroadcast, loadingGames }: BroadcastListProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { broadcasts, loading, error, refresh } = useBroadcasts();
 
@@ -27,13 +26,9 @@ export default function BroadcastList({ onSelectGame, onFetchGames, loadingGames
       if (broadcasts.length === 0) {
         return;
       }
-      
+
       const selected = broadcasts[selectedIndex];
-      
-      if (selected && selected.rounds && selected.rounds.length > 0) {
-        const round = selected.rounds[0];
-        onFetchGames(round.id);
-      }
+      onSelectBroadcast(selected);
     } else if (key.escape) {
       process.exit(0);
     } else if (input === 'r') {
@@ -74,7 +69,7 @@ export default function BroadcastList({ onSelectGame, onFetchGames, loadingGames
       ))}
       <Box marginTop={1}>
         <Text color="gray">
-          [↑/k] Up  [↓/j] Down  [Enter] Fetch Games  [r] Refresh  [q/Esc] Quit
+          [↑/k] Up  [↓/j] Down  [Enter] Select Broadcast  [r] Refresh  [q/Esc] Quit
         </Text>
       </Box>
     </Box>
