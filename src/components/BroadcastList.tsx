@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { useBroadcasts } from '../hooks/useBroadcasts';
 import { Broadcast } from '../types/index.js';
 import { defaultTheme } from '../lib/themes.js';
+import HelpBar from './HelpBar.js';
 
 interface BroadcastListProps {
   onSelectBroadcast: (broadcast: Broadcast) => void;
@@ -55,23 +56,21 @@ export default function BroadcastList({ onSelectBroadcast, loadingGames }: Broad
   }
 
   return (
-    <Box flexDirection="column">
-      <Text bold marginBottom={1} color={defaultTheme.accent}>Available Broadcasts:</Text>
-      {broadcasts.map((broadcast, index) => (
-        <Box key={broadcast.tour.id}>
-          <Box backgroundColor={index === selectedIndex ? defaultTheme.highlight : undefined} paddingX={1}>
-            <Text>
-              {index === selectedIndex ? '▶ ' : '  '}
-              {broadcast.tour.name} - {broadcast.rounds && broadcast.rounds[0] ? broadcast.rounds[0].name : 'No rounds'}
-            </Text>
+    <Box flexDirection="column" height="100%" padding={1}>
+      <Box flexDirection="column" flexGrow={1}>
+        <Text bold marginBottom={1} color={defaultTheme.accent}>Available Broadcasts:</Text>
+        {broadcasts.map((broadcast, index) => (
+          <Box key={broadcast.tour.id}>
+            <Box backgroundColor={index === selectedIndex ? defaultTheme.highlight : undefined} paddingX={1}>
+              <Text>
+                {index === selectedIndex ? '▶ ' : '  '}
+                {broadcast.tour.name} - {broadcast.rounds && broadcast.rounds[0] ? broadcast.rounds[0].name : 'No rounds'}
+              </Text>
+            </Box>
           </Box>
-        </Box>
-      ))}
-      <Box marginTop={1}>
-        <Text color="gray">
-          [↑/k] Up  [↓/j] Down  [Enter] Select Broadcast  [r] Refresh  [q/Esc] Quit
-        </Text>
+        ))}
       </Box>
+      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Broadcast  [r] Refresh  [q/Esc] Quit" />
     </Box>
   );
 }
