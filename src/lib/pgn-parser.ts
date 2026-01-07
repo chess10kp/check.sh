@@ -2,9 +2,12 @@ import { Chess } from 'chess.js';
 import { Game, BroadcastPlayer } from '../types/index.js';
 
 export function parsePGN(pgn: string): Game[] {
+  console.log('[pgn-parser] Parsing PGN, length:', pgn.length);
   const games: Game[] = [];
 
   const pgnArray = pgn.split(/\n\n+/);
+  console.log('[pgn-parser] Split into', pgnArray.length, 'potential games');
+
   const gameHeaders: string[] = [];
   const gameBodies: string[] = [];
 
@@ -32,6 +35,8 @@ export function parsePGN(pgn: string): Game[] {
     }
   }
 
+  console.log('[pgn-parser] Found', gameHeaders.length, 'games with headers');
+
   for (let i = 0; i < gameHeaders.length; i++) {
     const game = parseSingleGame(gameHeaders[i]!, gameBodies[i] ?? '');
     if (game) {
@@ -39,10 +44,13 @@ export function parsePGN(pgn: string): Game[] {
     }
   }
 
+  console.log('[pgn-parser] Successfully parsed', games.length, 'games');
   return games;
 }
 
 function parseSingleGame(headers: string, body: string): Game | null {
+  console.log('[pgn-parser] Parsing single game, headers length:', headers.length, 'body length:', body.length);
+
   const headerMap = new Map<string, string>();
   const headerRegex = /\[(\w+)\s+"([^"]+)"\]/g;
   let match;
@@ -55,6 +63,8 @@ function parseSingleGame(headers: string, body: string): Game | null {
 
   const whiteName = headerMap.get('White') ?? 'Unknown';
   const blackName = headerMap.get('Black') ?? 'Unknown';
+
+  console.log('[pgn-parser] Players:', whiteName, 'vs', blackName);
 
   const whiteElo = parseInt(headerMap.get('WhiteElo') ?? '0', 10);
   const blackElo = parseInt(headerMap.get('BlackElo') ?? '0', 10);
@@ -82,7 +92,7 @@ function parseSingleGame(headers: string, body: string): Game | null {
       status = 'stalemate';
     }
   } catch (err) {
-    console.error('Failed to parse PGN:', err);
+    console.error('[pgn-parser] Failed to parse PGN:', err);
   }
 
   return {

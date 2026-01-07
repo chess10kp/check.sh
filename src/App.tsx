@@ -42,16 +42,31 @@ export default function App() {
     setLoadingGames(true);
     setRoundName(round.name);
 
+    console.log('[App] Selecting round:', { id: round.id, name: round.name });
+
     try {
+      const allPgnData: string[] = [];
       await streamRoundPGN(round.id, (pgn: string) => {
-        const parsedGames = parsePGN(pgn);
-        if (parsedGames.length > 0) {
-          setGames(parsedGames);
-          setViewState('games-list');
-        }
+        console.log('[App] Received PGN chunk:', pgn.substring(0) + '...');
+        allPgnData.push(pgn);
       });
+
+      const fullPgn = allPgnData.join('\n\n');
+      console.log('[App] Total PGN data received:', fullPgn.length, 'characters');
+
+      const parsedGames = parsePGN(fullPgn);
+      console.log('[App] Parsed games:', parsedGames.length);
+
+      if (parsedGames.length > 0) {
+        console.log('[App] First game players:', parsedGames[0].players.map(p => p.name));
+        setGames(parsedGames);
+        setViewState('games-list');
+      } else {
+        console.log('[App] No games parsed from PGN');
+      }
     } catch (err: any) {
-      console.error('Error streaming PGN:', err.message);
+      console.error('[App] Error streaming PGN:', err.message);
+      console.error('[App] Error stack:', err.stack);
     } finally {
       setLoadingGames(false);
     }
@@ -61,7 +76,7 @@ export default function App() {
     <Box flexDirection="column">
       <Box borderStyle="double" borderColor="cyan" paddingX={1}>
         <Text bold color="cyan">
-          Lichess TUI Viewer v1.0
+          Check.sh
         </Text>
       </Box>
 
@@ -76,6 +91,13 @@ export default function App() {
           broadcastName={selectedBroadcast.tour.name}
           onSelectRound={handleSelectRound}
           onBack={handleBackToList}
+        />
+      ) : viewState === 'games-list' ? (
+        <GamesList
+          games={games}
+          roundName={roundName}
+          onSelectGame={handleSelectGame}
+          onBack={handleBackToRounds}
         />
       ) : (
         <GameView game={selectedGame} onBack={handleBackToRounds} />

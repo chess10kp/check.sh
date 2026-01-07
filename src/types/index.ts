@@ -1,6 +1,3 @@
-// TypeScript types for Lichess TUI Viewer
-// Based on SPEC.md section 3.5
-
 export interface Broadcast {
   tour: {
     id: string;

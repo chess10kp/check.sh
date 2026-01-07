@@ -58,12 +58,19 @@ export async function streamRoundPGN(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${LICHESS_API_URL}/stream/broadcast/round/${roundId}.pgn`, {
+  const url = `${LICHESS_API_URL}/stream/broadcast/round/${roundId}.pgn`;
+  console.log('[lichess-api] Fetching PGN from:', url);
+
+  const response = await fetch(url, {
     headers,
   });
 
+  console.log('[lichess-api] Response status:', response.status, response.statusText);
+
   if (!response.ok) {
-    throw new Error(`Failed to stream round PGN: ${response.status}`);
+    const errorText = await response.text();
+    console.error('[lichess-api] Error response:', errorText);
+    throw new Error(`Failed to stream round PGN: ${response.status} - ${errorText}`);
   }
 
   const reader = response.body?.getReader();
@@ -73,15 +80,18 @@ export async function streamRoundPGN(
 
   const decoder = new TextDecoder();
   let buffer = '';
+  let totalBytes = 0;
 
   try {
     while (true) {
       const { done, value } = await reader.read();
 
       if (done) {
+        console.log('[lichess-api] Stream finished, total bytes:', totalBytes);
         break;
       }
 
+      totalBytes += value.length;
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
       buffer = lines.pop() || '';

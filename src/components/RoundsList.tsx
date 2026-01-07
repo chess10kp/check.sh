@@ -3,6 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import { BroadcastRound } from '../types/index.js';
 import { fetchBroadcastRounds } from '../lib/lichess-api.js';
 import { defaultTheme } from '../lib/themes.js';
+import HelpBar from './HelpBar.js';
 
 interface RoundsListProps {
   broadcastId: string;
@@ -90,42 +91,40 @@ export default function RoundsList({
   }
 
   return (
-    <Box flexDirection="column">
-      <Text bold marginBottom={1} color={defaultTheme.accent}>
-        {broadcastName}
-      </Text>
-      <Text marginBottom={1} color="gray">
-        Select a round:
-      </Text>
-      {rounds.length === 0 ? (
-        <Box padding={1}>
-          <Text color="gray">No rounds available</Text>
-        </Box>
-      ) : (
-        rounds.map((round, index) => (
-          <Box key={round.id}>
-            <Box
-              backgroundColor={index === selectedIndex ? defaultTheme.highlight : undefined}
-              paddingX={1}
-            >
-              <Text>
-                {index === selectedIndex ? '▶ ' : '  '}
-                {round.name}
-                {round.finished !== undefined && (
-                  <Text color={round.finished ? 'green' : 'yellow'}>
-                    {' '}{round.finished ? '(Finished)' : '(Live)'}
-                  </Text>
-                )}
-              </Text>
-            </Box>
-          </Box>
-        ))
-      )}
-      <Box marginTop={1}>
-        <Text color="gray">
-          [↑/k] Up  [↓/j] Down  [Enter] Select Round  [r] Refresh  [q/Esc] Back
+    <Box flexDirection="column" height="100%" padding={1}>
+      <Box flexDirection="column" flexGrow={1}>
+        <Text bold marginBottom={1} color={defaultTheme.accent}>
+          {broadcastName}
         </Text>
+        <Text marginBottom={1} color="gray">
+          Select a round:
+        </Text>
+        {rounds.length === 0 ? (
+          <Box padding={1}>
+            <Text color="gray">No rounds available</Text>
+          </Box>
+        ) : (
+          rounds.map((round, index) => (
+            <Box key={round.id}>
+              <Box
+                backgroundColor={index === selectedIndex ? defaultTheme.highlight : undefined}
+                paddingX={1}
+              >
+                <Text>
+                  {index === selectedIndex ? '▶ ' : '  '}
+                  {round.name}
+                  {round.finished !== undefined && (
+                    <Text color={round.finished ? 'green' : 'yellow'}>
+                      {' '}{round.finished ? '(Finished)' : '(Live)'}
+                    </Text>
+                  )}
+                </Text>
+              </Box>
+            </Box>
+          ))
+        )}
       </Box>
+      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Round  [r] Refresh  [q/Esc] Back" />
     </Box>
   );
 }
