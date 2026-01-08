@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
 import ChessBoard from './ChessBoard.js';
 import PlayerInfo from './PlayerInfo.js';
@@ -25,12 +25,6 @@ export default function GameView({ game, onBack }: GameViewProps) {
   const canGoNext = game.fenHistory ? currentMoveIndex < game.fenHistory.length - 1 : false;
   const canGoPrevious = currentMoveIndex > 0;
   const totalMoves = game.fenHistory ? game.fenHistory.length - 1 : 0;
-
-  const currentMoveNotation = useMemo(() => {
-    if (!game.moves) return undefined;
-    const moveArray = game.moves.split(' ').filter(m => m);
-    return moveArray[currentMoveIndex - 1];
-  }, [game.moves, currentMoveIndex]);
 
   useInput((input, key) => {
     if (input === 'q') {
@@ -77,13 +71,6 @@ export default function GameView({ game, onBack }: GameViewProps) {
                 isWhite={false}
                 isActive={game.status === 'playing'}
               />
-            )}
-
-            {currentMoveNotation && (
-              <Box marginTop={1} borderStyle="single" paddingX={1}>
-                <Text color="gray">Last move: </Text>
-                <Text bold color={defaultTheme.accent}>{currentMoveNotation}</Text>
-              </Box>
             )}
 
             <Box marginTop={1} flexGrow={1}>
