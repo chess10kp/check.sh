@@ -1,7 +1,7 @@
-import React from 'react';
+import { memo } from 'react';
 import { Box, Text } from 'ink';
-import { BroadcastPlayer } from '../types';
-import { defaultTheme } from '../lib/themes';
+import { BroadcastPlayer } from '../types/index.js';
+import { defaultTheme } from '../lib/themes.js';
 
 interface PlayerInfoProps {
   player: BroadcastPlayer;
@@ -9,7 +9,7 @@ interface PlayerInfoProps {
   isActive: boolean;
 }
 
-export default function PlayerInfo({ player, isWhite, isActive }: PlayerInfoProps) {
+function PlayerInfo({ player, isWhite, isActive }: PlayerInfoProps) {
   return (
     <Box flexDirection="column" marginBottom={1}>
       <Box flexDirection="row">
@@ -34,3 +34,5 @@ function formatClock(seconds: number): string {
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
+
+export default memo(PlayerInfo);

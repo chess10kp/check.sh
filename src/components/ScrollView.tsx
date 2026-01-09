@@ -49,7 +49,7 @@ function reducer(state: ScrollState, action: ScrollAction): ScrollState {
 
       if (action.index < state.scrollTop) {
         newScrollTop = action.index;
-      } else if (action.index >= state.scrollTop + state.height) {
+      } else if (action.index > state.scrollTop + state.height - 1) {
         newScrollTop = action.index - state.height + 1;
       }
 

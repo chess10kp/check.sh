@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import { Box, Text } from 'ink';
 
 interface HelpBarProps {
   shortcuts: string;
 }
 
-export default function HelpBar({ shortcuts }: HelpBarProps) {
+function HelpBar({ shortcuts }: HelpBarProps) {
   return (
     <Box justifyContent="space-between">
       <Box borderStyle="single" borderColor="gray" paddingX={2}>
@@ -13,3 +14,5 @@ export default function HelpBar({ shortcuts }: HelpBarProps) {
     </Box>
   );
 }
+
+export default memo(HelpBar);

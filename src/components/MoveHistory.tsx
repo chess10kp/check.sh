@@ -18,7 +18,7 @@ export default function MoveHistory({ moves, currentMoveIndex = 0 }: MoveHistory
   const displayPairs = getDisplayPairs(movePairs, currentMoveIndex);
 
   return (
-      <Box flexDirection="column" borderStyle="single" paddingX={1} height={16}>
+      <Box flexDirection="column" borderStyle="single" paddingX={1} paddingY={1} height={16}>
         <Box flexDirection="column">
           {displayPairs.map((pair) => {
             const actualIndex = pair.actualIndex;

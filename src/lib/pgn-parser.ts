@@ -7,10 +7,11 @@ export function parsePGN(pgn: string): Game[] {
     const games: Game[] = [];
     const parsedGames = parse(pgn, { startRule: 'games' }) as { tags: any; moves: any[] }[];
 
-    for (const parsedGame of parsedGames) {
+    for (let i = 0; i < parsedGames.length; i++) {
+      const parsedGame = parsedGames[i];
       if (!parsedGame || !parsedGame.tags) continue;
 
-      const game = parseSingleGame(parsedGame);
+      const game = parseSingleGame(parsedGame, i);
       if (game) {
         games.push(game);
       }
@@ -23,7 +24,7 @@ export function parsePGN(pgn: string): Game[] {
   }
 }
 
-function parseSingleGame(parsedGame: { tags: any; moves: any[] }): Game | null {
+function parseSingleGame(parsedGame: { tags: any; moves: any[] }, index: number): Game | null {
   const { tags, moves } = parsedGame;
   if (!tags) return null;
 
@@ -84,8 +85,11 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }): Game | null {
 
   const pgnText = formatTagsAsPGN(tags) + '\n\n' + formatMovesAsPGN(moves);
   const moveNotations = formatMovesAsPGN(moves);
+  const gameId = `game-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${index}`;
 
   return {
+    id: gameId,
+    name: `${whiteName} vs ${blackName}`,
     players,
     fen,
     status,

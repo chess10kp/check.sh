@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import ChessBoard from './ChessBoard.js';
 import PlayerInfo from './PlayerInfo.js';
@@ -8,6 +8,20 @@ import { Game } from '../types/index.js';
 import { defaultTheme } from '../lib/themes.js';
 import HelpBar from './HelpBar.js';
 import ScrollView from './ScrollView.js';
+
+interface GameHeaderProps {
+  name: string | undefined;
+}
+
+function GameHeader({ name }: GameHeaderProps) {
+  return (
+    <Box paddingX={1} marginBottom={1}>
+      <Text bold color={defaultTheme.accent}>{name || 'Chess Game'}</Text>
+    </Box>
+  );
+}
+
+const MemoizedGameHeader = memo(GameHeader);
 
 type FocusArea = 'board' | 'sidebar';
 
@@ -54,7 +68,7 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
       if (focus === 'board' && canGoPrevious) {
         setCurrentMoveIndex(currentMoveIndex - 1);
       }
-    } else if (input === '\t') {
+    } else if (key.tab) {
       setFocus(prev => prev === 'board' ? 'sidebar' : 'board');
     } else if (focus === 'sidebar') {
       if (key.upArrow || input === 'k') {
@@ -73,9 +87,7 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
   return (
     <Box flexDirection="column" height="100%" padding={1}>
       <Box flexDirection="column" flexGrow={1}>
-        <Box paddingX={1} marginBottom={1}>
-          <Text bold color={defaultTheme.accent}>{game.name}</Text>
-        </Box>
+        <MemoizedGameHeader name={game.name} />
 
         <Box flexDirection="row">
           <GameListSidebar
@@ -89,9 +101,8 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
             flexDirection="column"
             borderStyle="single"
             borderColor={focus === 'board' ? 'cyan' : 'gray'}
-            paddingX={1}
+            paddingX={2}
             marginX={1}
-            alignItems="center"
           >
             {currentFEN && (
               <ChessBoard fen={currentFEN} lastMove={game.lastMove ? { from: game.lastMove.substring(0, 2), to: game.lastMove.substring(2, 4) } : undefined} />
