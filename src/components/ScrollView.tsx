@@ -1,14 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import { Box, Text, measureElement } from 'ink';
-import { appendFileSync } from 'fs';
-import { homedir } from 'os';
-import { join } from 'path';
-
-const logFile = join(homedir(), '.check.sh', 'logs', 'scrollview.log');
-
-function log(msg: string) {
-  appendFileSync(logFile, `[${new Date().toISOString()}] ${msg}\n`);
-}
 
 interface ScrollViewProps {
   children: React.ReactNode;
@@ -57,10 +48,7 @@ function reducer(state: ScrollState, action: ScrollAction): ScrollState {
       const totalRows = itemCount * rowsPerItem;
       const indexRow = index * rowsPerItem;
       
-      log(`JUMP_TO_INDEX: index=${index}, itemCount=${itemCount}, rowsPerItem=${rowsPerItem}, totalRows=${totalRows}, indexRow=${indexRow}, state.height=${state.height}, state.scrollTop=${state.scrollTop}, state.innerHeight=${state.innerHeight}`);
-      
       if (index < 0 || index >= itemCount) {
-        log(`  -> OUT OF BOUNDS, returning unchanged state`);
         return state;
       }
       
@@ -71,23 +59,16 @@ function reducer(state: ScrollState, action: ScrollAction): ScrollState {
       const canScrollDown = newScrollTop + state.height < totalRows;
       const visibleHeight = state.height - (canScrollUp ? 1 : 0) - (canScrollDown ? 1 : 0);
 
-      log(`  -> maxScrollTop=${maxScrollTop}, canScrollUp=${canScrollUp}, canScrollDown=${canScrollDown}, visibleHeight=${visibleHeight}`);
-
       if (indexRow < newScrollTop) {
         newScrollTop = indexRow;
-        log(`  -> scrolling UP: newScrollTop=${newScrollTop}`);
       } else if (indexRow + rowsPerItem > newScrollTop + visibleHeight) {
         const newCanScrollUp = true;
         const newCanScrollDown = index < itemCount - 1;
         const newVisibleHeight = state.height - (newCanScrollUp ? 1 : 0) - (newCanScrollDown ? 1 : 0);
         newScrollTop = indexRow + rowsPerItem - newVisibleHeight;
-        log(`  -> scrolling DOWN: newCanScrollDown=${newCanScrollDown}, newVisibleHeight=${newVisibleHeight}, newScrollTop=${newScrollTop}`);
-      } else {
-        log(`  -> indexRow ${indexRow} is visible (scrollTop=${newScrollTop}, visibleHeight=${visibleHeight}), no scroll needed`);
       }
 
       const finalScrollTop = Math.min(Math.max(0, newScrollTop), maxScrollTop);
-      log(`  -> final scrollTop=${finalScrollTop}`);
 
       return {
         ...state,
@@ -100,7 +81,7 @@ function reducer(state: ScrollState, action: ScrollAction): ScrollState {
   }
 }
 
-export default function ScrollView({
+function ScrollView({
   children,
   height = 20,
   width,
@@ -186,3 +167,5 @@ export function truncateText(text: string, maxWidth: number): string {
   if (text.length <= maxWidth) return text;
   return text.slice(0, maxWidth - 1) + '…';
 }
+
+export default memo(ScrollView);

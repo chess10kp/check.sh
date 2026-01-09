@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Box, Text } from 'ink';
 
 interface MoveHistoryProps {
@@ -7,7 +8,7 @@ interface MoveHistoryProps {
 
 const MAX_DISPLAY_MOVES = 12;
 
-export default function MoveHistory({ moves, currentMoveIndex = 0 }: MoveHistoryProps) {
+function MoveHistory({ moves, currentMoveIndex = 0 }: MoveHistoryProps) {
   if (!moves) {
     return null;
   }
@@ -86,3 +87,5 @@ function parsePGN(moves: string): Array<{ white?: string; black?: string }> {
 
   return pairs;
 }
+
+export default memo(MoveHistory);

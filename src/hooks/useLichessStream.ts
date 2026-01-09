@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { readNdjsonStream } from '../lib/ndjson-parser';
+import { readNdjsonStream } from '../lib/ndjson-parser.js';
 
 export function useLichessStream(url: string, token?: string) {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<unknown[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,14 +18,14 @@ export function useLichessStream(url: string, token?: string) {
           throw new Error(`HTTP ${response.status}`);
         }
 
-        await readNdjsonStream(response, (item) => {
+        await readNdjsonStream(response, (item: unknown) => {
           if (!cancelled) {
             setData(prev => [...prev, item]);
           }
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!cancelled) {
-          setError(err.message);
+          setError(err instanceof Error ? err.message : String(err));
         }
       }
     }

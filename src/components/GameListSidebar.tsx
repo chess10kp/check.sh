@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Box, Text } from 'ink';
 import { Game } from '../types/index.js';
 import { defaultTheme } from '../lib/themes.js';
@@ -10,7 +11,7 @@ interface GameListSidebarProps {
   hasFocus: boolean;
 }
 
-export default function GameListSidebar({
+function GameListSidebar({
   games,
   selectedIndex,
   viewedGameIndex,
@@ -65,3 +66,5 @@ export default function GameListSidebar({
     </Box>
   );
 }
+
+export default memo(GameListSidebar);

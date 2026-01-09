@@ -56,5 +56,5 @@ export async function saveConfig(config: Config): Promise<void> {
 }
 
 export function getToken(): string | undefined {
-  return process.env.LICHESS_TOKEN;
+  return process.env['LICHESS_TOKEN'];
 }

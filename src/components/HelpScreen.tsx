@@ -1,6 +1,5 @@
-import React from 'react';
 import { Box, Text, useInput } from 'ink';
-import { defaultTheme } from '../lib/themes';
+import { defaultTheme } from '../lib/themes.js';
 
 interface HelpScreenProps {
   onClose: () => void;
@@ -15,7 +14,7 @@ export default function HelpScreen({ onClose }: HelpScreenProps) {
 
   return (
     <Box flexDirection="column" padding={1}>
-      <Text bold marginBottom={1}>Keyboard Shortcuts:</Text>
+      <Box marginBottom={1}><Text bold>Keyboard Shortcuts:</Text></Box>
 
       <Box flexDirection="column" marginBottom={1}>
         <Text color={defaultTheme.accent}>Broadcast List:</Text>
