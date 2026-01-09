@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import BroadcastList from './components/BroadcastList.js';
 import RoundsList from './components/RoundsList.js';
@@ -15,6 +15,24 @@ export default function App() {
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
   const [games, setGames] = useState<Game[]>([]);
   const [roundName, setRoundName] = useState<string>('');
+  const [resizeKey, setResizeKey] = useState(0);
+
+  useEffect(() => {
+    const handleResize = () => {
+      process.stdout.write('\x1B[2J\x1B[H');
+      setResizeKey(prev => prev + 1);
+    };
+
+    process.stdout.on('resize', handleResize);
+
+    return () => {
+      process.stdout.off('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    resizeKey;
+  }, [resizeKey]);
 
   const handleBackToList = () => {
     setSelectedGame(null);
@@ -36,6 +54,10 @@ export default function App() {
   const handleSelectGame = (game: Game) => {
     setSelectedGame(game);
     setViewState('game-view');
+  };
+
+  const handleGameSelectInView = (game: Game) => {
+    setSelectedGame(game);
   };
 
   const handleSelectRound = async (round: any) => {
@@ -74,7 +96,7 @@ export default function App() {
 
   return (
     <Box flexDirection="column">
-      <Box borderStyle="double" borderColor="cyan" paddingX={1}>
+      <Box borderStyle="single" borderColor="cyan" paddingX={1}>
         <Text bold color="cyan">
           Check.sh
         </Text>
@@ -101,7 +123,7 @@ export default function App() {
           onBack={handleBackToRounds}
         />
       ) : selectedGame ? (
-        <GameView game={selectedGame} onBack={handleBackToRounds} />
+        <GameView game={selectedGame} games={games} onBack={handleBackToRounds} onGameSelect={handleGameSelectInView} />
       ) : null}
     </Box>
   );

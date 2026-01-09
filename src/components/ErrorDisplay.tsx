@@ -28,7 +28,7 @@ export default function ErrorDisplay({
 
   return (
     <Box flexDirection="column" justifyContent="center" padding={2}>
-      <Box borderStyle="double" borderColor="red" paddingX={1} paddingY={1}>
+      <Box borderStyle="single" borderColor="red" paddingX={1} paddingY={1}>
         <Text color="red" bold>❌ Connection Error</Text>
         <Text marginTop={1}>{message}</Text>
         <Text color="gray" marginTop={1}>

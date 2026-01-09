@@ -61,7 +61,7 @@ export default function RoundsList({
       if (selected) {
         onSelectRound(selected);
       }
-    } else if (key.escape || input === 'q') {
+    } else if (key.escape || key.backspace || input === 'q') {
       onBack();
     } else if (input === 'r') {
       setLoading(true);
@@ -134,7 +134,7 @@ export default function RoundsList({
           ))
         )}
       </Box>
-      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Round  [r] Refresh  [q/Esc] Back" />
+      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Round  [r] Refresh  [q/Esc/Backspace] Back" />
     </Box>
   );
 }

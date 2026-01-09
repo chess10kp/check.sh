@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { useBroadcasts } from '../hooks/useBroadcasts';
+import { useBroadcasts } from '../hooks/useBroadcasts.js';
 import { Broadcast } from '../types/index.js';
 import { defaultTheme } from '../lib/themes.js';
 import HelpBar from './HelpBar.js';
+import ScrollView, { truncateText } from './ScrollView.js';
 
 interface BroadcastListProps {
   onSelectBroadcast: (broadcast: Broadcast) => void;
@@ -30,7 +31,7 @@ export default function BroadcastList({ onSelectBroadcast, loadingGames }: Broad
 
       const selected = broadcasts[selectedIndex];
       onSelectBroadcast(selected);
-    } else if (key.escape) {
+    } else if (key.escape || key.backspace) {
       process.exit(0);
     } else if (input === 'r') {
       refresh();
@@ -55,22 +56,34 @@ export default function BroadcastList({ onSelectBroadcast, loadingGames }: Broad
     );
   }
 
+  const maxNameWidth = 50;
+
   return (
     <Box flexDirection="column" height="100%" padding={1}>
       <Box flexDirection="column" flexGrow={1}>
-        <Text bold marginBottom={1} color={defaultTheme.accent}>Available Broadcasts:</Text>
-        {broadcasts.map((broadcast, index) => (
-          <Box key={broadcast.tour.id}>
-            <Box backgroundColor={index === selectedIndex ? defaultTheme.highlight : undefined} paddingX={1}>
+        <Text bold color={defaultTheme.accent}>Available Broadcasts:</Text>
+        <ScrollView
+          height={18}
+          selectedIndex={selectedIndex}
+        >
+          {broadcasts.map((broadcast, index) => (
+            <Box
+              key={broadcast.tour.id}
+              backgroundColor={index === selectedIndex ? defaultTheme.highlight : undefined}
+              paddingX={1}
+            >
               <Text>
                 {index === selectedIndex ? '▶ ' : '  '}
-                {broadcast.tour.name} - {broadcast.rounds && broadcast.rounds[0] ? broadcast.rounds[0].name : 'No rounds'}
+                {truncateText(broadcast.tour.name, maxNameWidth)}
+                {broadcast.rounds && broadcast.rounds[0] && (
+                  <Text color="gray"> - {truncateText(broadcast.rounds[0].name, 20)}</Text>
+                )}
               </Text>
             </Box>
-          </Box>
-        ))}
+          ))}
+        </ScrollView>
       </Box>
-      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Broadcast  [r] Refresh  [q/Esc] Quit" />
+      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Broadcast  [r] Refresh  [q/Esc/Backspace] Quit" />
     </Box>
   );
 }

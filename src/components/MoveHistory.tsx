@@ -9,21 +9,16 @@ const MAX_DISPLAY_MOVES = 12;
 
 export default function MoveHistory({ moves, currentMoveIndex = 0 }: MoveHistoryProps) {
   if (!moves) {
-    return (
-      <Box flexDirection="column" borderStyle="single" paddingX={1}>
-        <Text bold color="gray">Move History:</Text>
-        <Text color="gray">No moves yet</Text>
-      </Box>
-    );
+    return null;
   }
 
   const movePairs = parsePGN(moves);
+  const totalMoves = moves.split(' ').filter(m => m).length;
 
   const displayPairs = getDisplayPairs(movePairs, currentMoveIndex);
 
   return (
       <Box flexDirection="column" borderStyle="single" paddingX={1} height={16}>
-        <Text bold color="gray">Move History:</Text>
         <Box flexDirection="column">
           {displayPairs.map((pair) => {
             const actualIndex = pair.actualIndex;
@@ -41,7 +36,7 @@ export default function MoveHistory({ moves, currentMoveIndex = 0 }: MoveHistory
                   </Text>
                 </Text>
                 {pair.black && (
-                  <Text color="black">
+                  <Text color="white">
                     <Text backgroundColor={isBlackActive ? 'yellow' : undefined}>
                       {pair.black}
                     </Text>
@@ -51,9 +46,9 @@ export default function MoveHistory({ moves, currentMoveIndex = 0 }: MoveHistory
             );
           })}
         </Box>
-        {movePairs.length > MAX_DISPLAY_MOVES && (
-          <Text color="dimColor">... and {movePairs.length - MAX_DISPLAY_MOVES} more moves</Text>
-        )}
+        <Box marginTop={1}>
+          <Text color="gray" dimColor>Total: {totalMoves} moves</Text>
+        </Box>
       </Box>
   );
 }

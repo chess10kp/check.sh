@@ -7,7 +7,7 @@ export interface CacheEntry<T> {
   timestamp: number;
 }
 
-const CACHE_DIR = path.join(os.homedir(), '.lichess-tui', 'cache');
+const CACHE_DIR = path.join(os.homedir(), '.check.sh', 'cache');
 
 export async function getCache<T>(
   key: string,

@@ -11,7 +11,7 @@ export interface ColorTheme {
 export const defaultTheme: ColorTheme = {
   boardWhite: { r: 160, g: 160, b: 160 },
   boardBlack: { r: 128, g: 95, b: 69 },
-  pieceWhite: 'gray',
+  pieceWhite: '#e0e0e0',
   pieceBlack: 'black',
   highlight: 'yellow',
   text: 'white',

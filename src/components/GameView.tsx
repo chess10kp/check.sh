@@ -1,21 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import ChessBoard from './ChessBoard.js';
 import PlayerInfo from './PlayerInfo.js';
 import MoveHistory from './MoveHistory.js';
+import GameListSidebar from './GameListSidebar.js';
 import { Game } from '../types/index.js';
 import { defaultTheme } from '../lib/themes.js';
 import HelpBar from './HelpBar.js';
+import ScrollView from './ScrollView.js';
+
+type FocusArea = 'board' | 'sidebar';
 
 interface GameViewProps {
   game: Game;
+  games: Game[];
   onBack: () => void;
+  onGameSelect: (game: Game) => void;
 }
 
-export default function GameView({ game, onBack }: GameViewProps) {
+export default function GameView({ game, games, onBack, onGameSelect }: GameViewProps) {
   const [currentMoveIndex, setCurrentMoveIndex] = useState(
     game.currentMoveIndex ?? 0
   );
+  const [focus, setFocus] = useState<FocusArea>('board');
+  const [sidebarSelectedIndex, setSidebarSelectedIndex] = useState(0);
+
+  const viewedGameIndex = games.findIndex(g => g.id === game.id);
+
+  useEffect(() => {
+    setSidebarSelectedIndex(viewedGameIndex);
+  }, [viewedGameIndex]);
+
+  useEffect(() => {
+    setCurrentMoveIndex(game.currentMoveIndex ?? 0);
+  }, [game.id]);
 
   const whitePlayer = game.players[0];
   const blackPlayer = game.players[1];
@@ -24,18 +42,30 @@ export default function GameView({ game, onBack }: GameViewProps) {
 
   const canGoNext = game.fenHistory ? currentMoveIndex < game.fenHistory.length - 1 : false;
   const canGoPrevious = currentMoveIndex > 0;
-  const totalMoves = game.fenHistory ? game.fenHistory.length - 1 : 0;
 
   useInput((input, key) => {
-    if (input === 'q') {
+    if (input === 'q' || key.backspace) {
       onBack();
     } else if (input === 'n' || (key.rightArrow)) {
-      if (canGoNext) {
+      if (focus === 'board' && canGoNext) {
         setCurrentMoveIndex(currentMoveIndex + 1);
       }
     } else if (input === 'p' || (key.leftArrow)) {
-      if (canGoPrevious) {
+      if (focus === 'board' && canGoPrevious) {
         setCurrentMoveIndex(currentMoveIndex - 1);
+      }
+    } else if (input === '\t') {
+      setFocus(prev => prev === 'board' ? 'sidebar' : 'board');
+    } else if (focus === 'sidebar') {
+      if (key.upArrow || input === 'k') {
+        setSidebarSelectedIndex(i => Math.max(0, i - 1));
+      } else if (key.downArrow || input === 'j') {
+        setSidebarSelectedIndex(i => Math.min(games.length - 1, i + 1));
+      } else if (key.return) {
+        const selectedGame = games[sidebarSelectedIndex];
+        if (selectedGame) {
+          onGameSelect(selectedGame);
+        }
       }
     }
   });
@@ -43,35 +73,48 @@ export default function GameView({ game, onBack }: GameViewProps) {
   return (
     <Box flexDirection="column" height="100%" padding={1}>
       <Box flexDirection="column" flexGrow={1}>
-        <Box borderStyle="single" paddingX={1} marginBottom={1}>
+        <Box paddingX={1} marginBottom={1}>
           <Text bold color={defaultTheme.accent}>{game.name}</Text>
-          {totalMoves > 0 && (
-            <Text color="gray"> - Move {currentMoveIndex} of {totalMoves}</Text>
-          )}
         </Box>
 
         <Box flexDirection="row">
-          <Box flexDirection="column" alignItems="flex-end">
+          <GameListSidebar
+            games={games}
+            selectedIndex={sidebarSelectedIndex}
+            viewedGameIndex={viewedGameIndex}
+            hasFocus={focus === 'sidebar'}
+          />
+
+          <Box
+            flexDirection="column"
+            borderStyle="single"
+            borderColor={focus === 'board' ? 'cyan' : 'gray'}
+            paddingX={1}
+            marginX={1}
+            alignItems="center"
+          >
             {currentFEN && (
               <ChessBoard fen={currentFEN} lastMove={game.lastMove ? { from: game.lastMove.substring(0, 2), to: game.lastMove.substring(2, 4) } : undefined} />
             )}
           </Box>
 
-          <Box flexDirection="column" width={45} marginLeft={1}>
-            {whitePlayer && (
-              <PlayerInfo
-                player={whitePlayer}
-                isWhite={true}
-                isActive={game.status === 'playing'}
-              />
-            )}
-            {blackPlayer && (
-              <PlayerInfo
-                player={blackPlayer}
-                isWhite={false}
-                isActive={game.status === 'playing'}
-              />
-            )}
+          <Box flexDirection="column" width={45}>
+            <ScrollView height={10}>
+              {whitePlayer && (
+                <PlayerInfo
+                  player={whitePlayer}
+                  isWhite={true}
+                  isActive={game.status === 'playing'}
+                />
+              )}
+              {blackPlayer && (
+                <PlayerInfo
+                  player={blackPlayer}
+                  isWhite={false}
+                  isActive={game.status === 'playing'}
+                />
+              )}
+            </ScrollView>
 
             <Box marginTop={1} flexGrow={1}>
               <MoveHistory moves={game.moves} currentMoveIndex={currentMoveIndex} />
@@ -80,7 +123,11 @@ export default function GameView({ game, onBack }: GameViewProps) {
         </Box>
       </Box>
 
-      <HelpBar shortcuts="[n/→] Next move | [p/←] Prev move | [q] Return" />
+      <HelpBar shortcuts={
+        focus === 'board'
+          ? "[n/→] Next move | [p/←] Prev move | [Tab] Sidebar | [q/Backspace] Return"
+          : "[↑/k] Up | [↓/j] Down | [Enter] Select | [Tab] Board | [q/Backspace] Return"
+      } />
     </Box>
   );
 }

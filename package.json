@@ -1,5 +1,5 @@
 {
-	"name": "lichess-tui",
+	"name": "check.sh",
 	"version": "1.0.0",
 	"description": "Terminal User Interface (TUI) application for viewing live chess games from Lichess broadcasts",
 	"license": "MIT",

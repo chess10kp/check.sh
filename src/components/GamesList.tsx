@@ -3,6 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import { Game } from '../types/index.js';
 import { defaultTheme } from '../lib/themes.js';
 import HelpBar from './HelpBar.js';
+import ScrollView, { truncateText } from './ScrollView.js';
 
 interface GamesListProps {
   games: Game[];
@@ -32,10 +33,12 @@ export default function GamesList({
       if (selectedGame) {
         onSelectGame(selectedGame);
       }
-    } else if (key.escape || input === 'q') {
+    } else if (key.escape || key.backspace || input === 'q') {
       onBack();
     }
   });
+
+  const maxNameWidth = 40;
 
   return (
     <Box flexDirection="column" height="100%" padding={1}>
@@ -54,14 +57,21 @@ export default function GamesList({
             <Text color="gray">Press q to return to rounds</Text>
           </Box>
         ) : (
-          games.map((game, index) => {
-            const white = game.players[0];
-            const black = game.players[1];
-            const gameTitle = `${white?.name || '?'} vs ${black?.name || '?'}`;
+          <ScrollView
+            height={18}
+            selectedIndex={selectedIndex}
+          >
+            {games.map((game, index) => {
+              const white = game.players[0];
+              const black = game.players[1];
+              const gameTitle = truncateText(
+                `${white?.name || '?'} vs ${black?.name || '?'}`,
+                maxNameWidth
+              );
 
-            return (
-              <Box key={game.id || index}>
+              return (
                 <Box
+                  key={game.id || index}
                   backgroundColor={index === selectedIndex ? defaultTheme.highlight : undefined}
                   paddingX={1}
                 >
@@ -76,12 +86,12 @@ export default function GamesList({
                     )}
                   </Text>
                 </Box>
-              </Box>
-            );
-          })
+              );
+            })}
+          </ScrollView>
         )}
       </Box>
-      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Game  [q/Esc] Back" />
+      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Game  [q/Esc/Backspace] Back" />
     </Box>
   );
 }
