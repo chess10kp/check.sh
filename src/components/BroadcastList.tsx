@@ -13,7 +13,13 @@ interface BroadcastListProps {
 
 export default function BroadcastList({ onSelectBroadcast, setLoading }: BroadcastListProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const { broadcasts, error, refresh } = useBroadcasts();
+  const { broadcasts, loading, error, refresh } = useBroadcasts();
+
+  useEffect(() => {
+    if (setLoading) {
+      setLoading(loading);
+    }
+  }, [loading, setLoading]);
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -30,7 +36,9 @@ export default function BroadcastList({ onSelectBroadcast, setLoading }: Broadca
       }
 
       const selected = broadcasts[selectedIndex];
-      onSelectBroadcast(selected);
+      if (selected) {
+        onSelectBroadcast(selected);
+      }
     } else if (key.escape) {
       process.exit(0);
     } else if (input === 'r') {
