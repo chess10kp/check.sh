@@ -6,7 +6,8 @@ import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
 const CELL_WIDTH = 8;
 const PIXEL_ART_CELL_WIDTH = 18;
-const SMALL_CELL_HEIGHT = 3;
+const SMALL_CELL_WIDTH = 4;
+const SMALL_CELL_HEIGHT = 1;
 
 interface ChessBoardProps {
   fen: string;
@@ -101,16 +102,18 @@ function SmallSquareCell({ square, isWhiteSquare, isLastMove, cellRow }: SmallSq
   const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
   const isMiddleRow = cellRow === Math.floor(SMALL_CELL_HEIGHT / 2);
 
-  let content = ' '.repeat(CELL_WIDTH);
+  let content = ' '.repeat(SMALL_CELL_WIDTH);
   if (isMiddleRow && square.piece) {
     const symbol = getPieceSymbol(square.piece.color, square.piece.type, 'small');
-    const padding = Math.floor((CELL_WIDTH - 1) / 2);
-    content = ' '.repeat(padding) + symbol + ' '.repeat(CELL_WIDTH - padding - 1);
+    // Symbol width: black pawn with FE0E + space = 2 chars, others = 1 wide char (2 cells)
+    const symbolWidth = 2;
+    const padding = Math.floor((SMALL_CELL_WIDTH - symbolWidth) / 2);
+    content = ' '.repeat(padding) + symbol + ' '.repeat(SMALL_CELL_WIDTH - padding - symbolWidth);
   }
 
   return (
     <Box
-      width={CELL_WIDTH}
+      width={SMALL_CELL_WIDTH}
       backgroundColor={isLastMove ? defaultTheme.highlight : bgColor}
     >
       <Text color={pieceColor}>{content}</Text>
@@ -378,7 +381,7 @@ function ChessBoard({ fen, lastMove }: ChessBoardProps) {
         <Box flexDirection="row">
           <Box width={1} />
           {'abcdefgh'.split('').map(file => (
-            <Box key={file} width={CELL_WIDTH} justifyContent="center">
+            <Box key={file} width={SMALL_CELL_WIDTH} justifyContent="center">
               <Text color="gray">{file}</Text>
             </Box>
           ))}

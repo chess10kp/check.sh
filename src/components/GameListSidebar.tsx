@@ -1,8 +1,9 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Box, Text } from 'ink';
 import { Game } from '../types/index.js';
 import { defaultTheme } from '../lib/themes.js';
 import ScrollView, { truncateText } from './ScrollView.js';
+import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
 interface GameListSidebarProps {
   games: Game[];
@@ -17,6 +18,17 @@ function GameListSidebar({
   viewedGameIndex,
   hasFocus,
 }: GameListSidebarProps) {
+  const { height: terminalHeight } = useTerminalSize(150);
+
+  // Calculate dynamic height: terminal height - app header (4) - sidebar header (2) - border (2) - padding (2) - helpbar (3)
+  const scrollViewHeight = useMemo(() => {
+    const APP_HEADER_HEIGHT = 4; // border (2) + text (1) + marginBottom (1)
+    const SIDEBAR_HEADER_HEIGHT = 2;
+    const BORDER = 2;
+    const PADDING = 2;
+    const HELPBAR_HEIGHT = 3;
+    return Math.max(5, terminalHeight - APP_HEADER_HEIGHT - SIDEBAR_HEADER_HEIGHT - BORDER - PADDING - HELPBAR_HEIGHT);
+  }, [terminalHeight]);
   const maxNameWidth = 35;
 
   return (
@@ -34,7 +46,7 @@ function GameListSidebar({
       </Box>
 
       <ScrollView
-        height={18}
+        height={scrollViewHeight}
         selectedIndex={selectedIndex}
       >
         {games.map((game, index) => {

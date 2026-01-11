@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { BroadcastRound } from '../types/index.js';
 import { fetchBroadcastRounds } from '../lib/lichess-api.js';
 import { defaultTheme } from '../lib/themes.js';
 import HelpBar from './HelpBar.js';
+import ScrollView from './ScrollView.js';
+import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
 interface RoundsListProps {
   broadcastId: string;
@@ -26,6 +28,17 @@ export default function RoundsList({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const { height: terminalHeight } = useTerminalSize(150);
+
+  // Calculate dynamic height: terminal height - app header (4) - local header (1) - subheader (2) - padding (2) - helpbar (3)
+  const scrollViewHeight = useMemo(() => {
+    const APP_HEADER_HEIGHT = 4; // border (2) + text (1) + marginBottom (1)
+    const LOCAL_HEADER_HEIGHT = 1;
+    const SUBHEADER_HEIGHT = 2;
+    const PADDING = 2;
+    const HELPBAR_HEIGHT = 3;
+    return Math.max(5, terminalHeight - APP_HEADER_HEIGHT - LOCAL_HEADER_HEIGHT - SUBHEADER_HEIGHT - PADDING - HELPBAR_HEIGHT);
+  }, [terminalHeight]);
 
   useEffect(() => {
     setLoadingRounds?.(loading);
@@ -104,9 +117,10 @@ export default function RoundsList({
             <Text color="gray">No rounds available</Text>
           </Box>
         ) : (
-          rounds.map((round, index) => (
-            <Box key={round.id}>
+          <ScrollView height={scrollViewHeight} selectedIndex={selectedIndex}>
+            {rounds.map((round, index) => (
               <Box
+                key={round.id}
                 backgroundColor={index === selectedIndex ? defaultTheme.highlight : undefined}
                 paddingX={1}
               >
@@ -120,8 +134,8 @@ export default function RoundsList({
                   )}
                 </Text>
               </Box>
-            </Box>
-          ))
+            ))}
+          </ScrollView>
         )}
       </Box>
       <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Round  [r] Refresh  [q/Esc] Back" />

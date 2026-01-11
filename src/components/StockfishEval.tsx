@@ -51,7 +51,7 @@ const EvalBar = memo(function EvalBar({ score, isMate }: { score: number; isMate
 
 const EVAL_HEIGHT = 6;
 
-function StockfishEval({ fen }: StockfishEvalProps) {
+const StockfishEval = ({ fen }: StockfishEvalProps) => {
   const state = useStockfish(fen, { depth: 20, multiPv: 3 });
 
   if (state.error) {
