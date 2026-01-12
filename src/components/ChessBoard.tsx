@@ -11,6 +11,7 @@ const SMALL_CELL_WIDTH = 3;
 interface ChessBoardProps {
   fen: string;
   lastMove?: { from: string; to: string };
+  flipped?: boolean;
 }
 
 interface Square {
@@ -49,13 +50,15 @@ interface CompactBoardRowProps {
   rankIndex: number;
   lastMoveFrom?: string;
   lastMoveTo?: string;
+  flipped?: boolean;
 }
 
-const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo }: CompactBoardRowProps) {
+const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo, flipped = false }: CompactBoardRowProps) {
+  const rank = flipped ? rankIndex + 1 : 8 - rankIndex;
   return (
     <Box flexDirection="row">
       <Box width={1} justifyContent="center" paddingRight={1}>
-        <Text color="gray">{8 - rankIndex}</Text>
+        <Text color="gray">{rank}</Text>
       </Box>
       {row.map((square, fileIndex) => {
         const file = String.fromCharCode(97 + fileIndex);
@@ -94,10 +97,11 @@ interface SmallBoardRowProps {
   rankIndex: number;
   lastMoveFrom?: string;
   lastMoveTo?: string;
+  flipped?: boolean;
 }
 
-const SmallBoardRow = memo(function SmallBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo }: SmallBoardRowProps) {
-  const rank = 8 - rankIndex;
+const SmallBoardRow = memo(function SmallBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo, flipped = false }: SmallBoardRowProps) {
+  const rank = flipped ? rankIndex + 1 : 8 - rankIndex;
   
   return (
     <Box flexDirection="row">
@@ -210,17 +214,19 @@ const PixelArtSquareRow = memo(function PixelArtSquareRow({ squares, pixelRow, r
 interface PixelArtBoardProps {
   squares: Square[][];
   lastMove?: { from: string; to: string };
+  flipped?: boolean;
 }
 
-const PixelArtBoard = memo(function PixelArtBoard({ squares, lastMove }: PixelArtBoardProps) {
+const PixelArtBoard = memo(function PixelArtBoard({ squares, lastMove, flipped = false }: PixelArtBoardProps) {
   const PIECE_HEIGHT = 8;
   const lastMoveFrom = lastMove?.from;
   const lastMoveTo = lastMove?.to;
+  const fileLabels = flipped ? 'hgfedcba' : 'abcdefgh';
 
   return (
     <Box flexDirection="column">
       {squares.map((row, rankIndex) => {
-        const rank = 8 - rankIndex;
+        const rank = flipped ? rankIndex + 1 : 8 - rankIndex;
 
           return (
             <Box key={`rank-${rank}`} flexDirection="column">
@@ -247,8 +253,8 @@ const PixelArtBoard = memo(function PixelArtBoard({ squares, lastMove }: PixelAr
       })}
       <Box flexDirection="row">
         <Box width={1} />
-        {'abcdefgh'.split('').map(file => (
-          <Box key={file} width={PIXEL_ART_CELL_WIDTH} justifyContent="center">
+        {fileLabels.split('').map((file, i) => (
+          <Box key={`${file}-${i}`} width={PIXEL_ART_CELL_WIDTH} justifyContent="center">
             <Text color="gray">{file}</Text>
           </Box>
         ))}
@@ -257,7 +263,7 @@ const PixelArtBoard = memo(function PixelArtBoard({ squares, lastMove }: PixelAr
   );
 });
 
-function ChessBoard({ fen, lastMove }: ChessBoardProps) {
+function ChessBoard({ fen, lastMove, flipped = false }: ChessBoardProps) {
   const { width: terminalWidth, height: terminalHeight } = useTerminalSize(150);
 
   const pieceSize = useMemo((): PieceSize => {
@@ -320,8 +326,15 @@ function ChessBoard({ fen, lastMove }: ChessBoardProps) {
     return result;
   }, [effectiveFen]);
 
+  const displaySquares = useMemo(() => {
+    if (!flipped) return squares;
+    return squares.map(row => [...row].reverse()).reverse();
+  }, [squares, flipped]);
+
+  const fileLabels = flipped ? 'hgfedcba' : 'abcdefgh';
+
   if (pieceSize === 'pixel-art') {
-    return <PixelArtBoard squares={squares} lastMove={lastMove} />;
+    return <PixelArtBoard squares={displaySquares} lastMove={lastMove} flipped={flipped} />;
   }
 
   if (pieceSize === 'small') {
@@ -330,8 +343,8 @@ function ChessBoard({ fen, lastMove }: ChessBoardProps) {
     
     return (
       <Box flexDirection="column">
-        {squares.map((row, rankIndex) => {
-          const rank = 8 - rankIndex;
+        {displaySquares.map((row, rankIndex) => {
+          const rank = flipped ? rankIndex + 1 : 8 - rankIndex;
           return (
             <SmallBoardRow
               key={`rank-${rank}`}
@@ -339,13 +352,14 @@ function ChessBoard({ fen, lastMove }: ChessBoardProps) {
               rankIndex={rankIndex}
               lastMoveFrom={lastMoveFrom}
               lastMoveTo={lastMoveTo}
+              flipped={flipped}
             />
           );
         })}
         <Box flexDirection="row">
           <Box width={1} />
-          {'abcdefgh'.split('').map((file) => (
-            <Box key={file} width={SMALL_CELL_WIDTH} justifyContent="center">
+          {fileLabels.split('').map((file, i) => (
+            <Box key={`${file}-${i}`} width={SMALL_CELL_WIDTH} justifyContent="center">
               <Text color="gray">{file}</Text>
             </Box>
           ))}
@@ -359,19 +373,23 @@ function ChessBoard({ fen, lastMove }: ChessBoardProps) {
 
   return (
     <Box flexDirection="column">
-      {squares.map((row, rankIndex) => (
-        <CompactBoardRow
-          key={`rank-${rankIndex}`}
-          row={row}
-          rankIndex={rankIndex}
-          lastMoveFrom={lastMoveFrom}
-          lastMoveTo={lastMoveTo}
-        />
-      ))}
+      {displaySquares.map((row, rankIndex) => {
+        const rank = flipped ? rankIndex + 1 : 8 - rankIndex;
+        return (
+          <CompactBoardRow
+            key={`rank-${rank}`}
+            row={row}
+            rankIndex={rankIndex}
+            lastMoveFrom={lastMoveFrom}
+            lastMoveTo={lastMoveTo}
+            flipped={flipped}
+          />
+        );
+      })}
       <Box flexDirection="row">
         <Box width={1} />
-        {'abcdefgh'.split('').map(file => (
-          <Box key={file} width={CELL_WIDTH} justifyContent="center">
+        {fileLabels.split('').map((file, i) => (
+          <Box key={`${file}-${i}`} width={CELL_WIDTH} justifyContent="center">
             <Text color="gray">{file}</Text>
           </Box>
         ))}
@@ -425,4 +443,10 @@ function parsePieceChar(char: string) {
   return { color, type };
 }
 
-export default memo(ChessBoard);
+export default memo(ChessBoard, (prev, next) => {
+  if (prev.fen !== next.fen) return false;
+  if (prev.lastMove?.from !== next.lastMove?.from) return false;
+  if (prev.lastMove?.to !== next.lastMove?.to) return false;
+  if (prev.flipped !== next.flipped) return false;
+  return true;
+});

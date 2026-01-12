@@ -14,6 +14,7 @@ interface RoundsListProps {
   onBack: () => void;
   token?: string;
   setLoadingRounds?: (loading: boolean) => void;
+  onOpen?: () => void;
 }
 
 export default function RoundsList({
@@ -23,6 +24,7 @@ export default function RoundsList({
   onBack,
   token,
   setLoadingRounds,
+  onOpen,
 }: RoundsListProps) {
   const [rounds, setRounds] = useState<BroadcastRound[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
@@ -108,6 +110,8 @@ export default function RoundsList({
       refreshData();
     } else if (input === 'l') {
       setShowLeaderboard(s => !s);
+    } else if (input === 'o' && onOpen) {
+      onOpen();
     }
   });
 
@@ -216,7 +220,7 @@ export default function RoundsList({
           )}
         </Box>
       </Box>
-      <HelpBar shortcuts={`[↑/k] Up  [↓/j] Down  [Enter] Select  [r] Refresh  ${hasLeaderboard ? '[l] Toggle Leaderboard  ' : ''}[q/Esc] Back`} />
+      <HelpBar shortcuts={`[↑/k] Up  [↓/j] Down  [Enter] Select  [o] Open  [r] Refresh  ${hasLeaderboard ? '[l] Toggle Leaderboard  ' : ''}[q/Esc] Back`} />
     </Box>
   );
 }

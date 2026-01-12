@@ -20,7 +20,7 @@ process.on('SIGTERM', () => {
 
 try {
   render(<App />, {
-    maxFps: 20,
+    patchConsole: false,
   });
 } catch (error: any) {
   restoreScreen();

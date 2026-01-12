@@ -1,7 +1,6 @@
 import { memo } from 'react';
 import { Box, Text } from 'ink';
 import { useStockfish } from '../hooks/useStockfish.js';
-import { defaultTheme } from '../lib/themes.js';
 
 interface StockfishEvalProps {
   fen: string | undefined;
@@ -85,7 +84,6 @@ const StockfishEval = ({ fen }: StockfishEvalProps) => {
   return (
     <Box flexDirection="column" paddingX={1} marginTop={1} height={EVAL_HEIGHT}>
       <Box marginBottom={1}>
-        <Text bold color={defaultTheme.accent}>Engine Evaluation</Text>
         {evaluation.isAnalyzing && <Text color="gray"> (analyzing...)</Text>}
       </Box>
 

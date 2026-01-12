@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Box, useApp, useInput } from 'ink';
 import BroadcastList from './components/BroadcastList.js';
 import RoundsList from './components/RoundsList.js';
@@ -10,6 +10,7 @@ import { streamRoundPGN } from './lib/lichess-api.js';
 import { parsePGN } from './lib/pgn-parser.js';
 import { getRoundPGNCache, setRoundPGNCache } from './lib/cache.js';
 import { BroadcastRound } from './types/index.js';
+import { openUrl } from './lib/open-url.js';
 
 export default function App() {
   const { exit } = useApp();
@@ -56,31 +57,31 @@ export default function App() {
     resizeKey;
   }, [resizeKey]);
 
-  const handleBackToList = () => {
+  const handleBackToList = useCallback(() => {
     setSelectedGame(null);
     setSelectedBroadcast(null);
     setViewState('broadcast-list');
-  };
+  }, []);
 
-  const handleSelectBroadcast = (broadcast: Broadcast) => {
+  const handleSelectBroadcast = useCallback((broadcast: Broadcast) => {
     setSelectedBroadcast(broadcast);
     setViewState('rounds-list');
-  };
+  }, []);
 
-  const handleBackToRounds = () => {
+  const handleBackToRounds = useCallback(() => {
     setSelectedGame(null);
     setGames([]);
     setViewState('rounds-list');
-  };
+  }, []);
 
-  const handleSelectGame = (game: Game) => {
+  const handleSelectGame = useCallback((game: Game) => {
     setSelectedGame(game);
     setViewState('game-view');
-  };
+  }, []);
 
-  const handleGameSelectInView = (game: Game) => {
+  const handleGameSelectInView = useCallback((game: Game) => {
     setSelectedGame(game);
-  };
+  }, []);
 
   const handleSelectRound = async (round: BroadcastRound) => {
     setLoadingGames(true);
@@ -147,6 +148,7 @@ export default function App() {
           onSelectBroadcast={handleSelectBroadcast}
           setLoading={setLoading}
           onQuit={exit}
+          onOpen={(url: string) => openUrl(url)}
         />
       ) : viewState === 'rounds-list' && selectedBroadcast ? (
         <RoundsList
@@ -155,6 +157,7 @@ export default function App() {
           onSelectRound={handleSelectRound}
           onBack={handleBackToList}
           setLoadingRounds={setLoadingRounds}
+          onOpen={() => selectedBroadcast && openUrl(selectedBroadcast.tour.url)}
         />
       ) : viewState === 'games-list' ? (
         <MultiBoardView
@@ -162,9 +165,16 @@ export default function App() {
           roundName={roundName}
           onSelectGame={handleSelectGame}
           onBack={handleBackToRounds}
+          onOpen={openUrl}
         />
       ) : selectedGame ? (
-        <GameView game={selectedGame} games={games} onBack={handleBackToRounds} onGameSelect={handleGameSelectInView} />
+        <GameView
+          game={selectedGame}
+          games={games}
+          onBack={handleBackToRounds}
+          onGameSelect={handleGameSelectInView}
+          onOpen={openUrl}
+        />
       ) : null}
     </Box>
   );

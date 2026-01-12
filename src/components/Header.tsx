@@ -9,7 +9,7 @@ interface HeaderProps {
 
 function Header({ loading, loadingGames, loadingRounds }: HeaderProps) {
   return (
-    <Box borderStyle="single" borderColor="cyan" marginBottom={1} paddingX={1}>
+    <Box borderStyle="single" borderColor="cyan" paddingX={1}>
       <Box flexGrow={1}>
         <Text bold color="cyan">Check.sh</Text>
       </Box>

@@ -12,6 +12,7 @@ interface MultiBoardViewProps {
   roundName: string;
   onSelectGame: (game: Game) => void;
   onBack: () => void;
+  onOpen?: (url: string) => void;
 }
 
 const MINI_BOARD_WIDTH = 25;
@@ -125,6 +126,7 @@ export default function MultiBoardView({
   roundName,
   onSelectGame,
   onBack,
+  onOpen,
 }: MultiBoardViewProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [forceListView, setForceListView] = useState(false);
@@ -178,6 +180,11 @@ export default function MultiBoardView({
         }
       } else if (key.escape || input === 'q') {
         onBack();
+      } else if (input === 'o' && onOpen) {
+        const selectedGame = firstRowGames[selectedIndex];
+        if (selectedGame?.id) {
+          onOpen(`https://lichess.org/${selectedGame.id}`);
+        }
       }
     } else {
       if (key.upArrow || input === 'k') {
@@ -193,6 +200,11 @@ export default function MultiBoardView({
         }
       } else if (key.escape || input === 'q') {
         onBack();
+      } else if (input === 'o' && onOpen) {
+        const selectedGame = games[selectedIndex];
+        if (selectedGame?.id) {
+          onOpen(`https://lichess.org/${selectedGame.id}`);
+        }
       }
     }
   });
@@ -219,7 +231,6 @@ export default function MultiBoardView({
         <Box marginBottom={1}>
           <Text color="gray">
             {games.length} game{games.length !== 1 ? 's' : ''} 
-            {useMultiBoardLayout ? ' • Use arrow keys to navigate' : ''}
           </Text>
         </Box>
 
@@ -252,12 +263,12 @@ export default function MultiBoardView({
           />
         )}
       </Box>
-      <HelpBar 
+      <HelpBar
         shortcuts={
-          useMultiBoardLayout 
-            ? "[←/h] [→/l] Navigate  [Enter] Select  [t] List View  [q/Esc] Back"
-            : `[↑/k] Up  [↓/j] Down  [Enter] Select  ${canUseMultiBoardLayout ? '[t] Board View  ' : ''}[q/Esc] Back`
-        } 
+          useMultiBoardLayout
+            ? "[←/h] [→/l] Navigate  [Enter] Select  [o] Open  [t] List View  [q/Esc] Back"
+            : `[↑/k] Up  [↓/j] Down  [Enter] Select  [o] Open  ${canUseMultiBoardLayout ? '[t] Board View  ' : ''}[q/Esc] Back`
+        }
       />
     </Box>
   );

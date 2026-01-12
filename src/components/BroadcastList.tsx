@@ -11,9 +11,10 @@ interface BroadcastListProps {
   onSelectBroadcast: (broadcast: Broadcast) => void;
   setLoading?: (loading: boolean) => void;
   onQuit?: () => void;
+  onOpen?: (url: string) => void;
 }
 
-export default function BroadcastList({ onSelectBroadcast, setLoading, onQuit }: BroadcastListProps) {
+export default function BroadcastList({ onSelectBroadcast, setLoading, onQuit, onOpen }: BroadcastListProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { broadcasts, loading, error, refresh } = useBroadcasts();
   const { height: terminalHeight } = useTerminalSize(150);
@@ -58,6 +59,11 @@ export default function BroadcastList({ onSelectBroadcast, setLoading, onQuit }:
       if (setLoading) setLoading(true);
     } else if (input === 'q') {
       onQuit?.();
+    } else if (input === 'o' && onOpen) {
+      const selected = broadcasts[selectedIndex];
+      if (selected) {
+        onOpen(selected.tour.url);
+      }
     }
   });
 
@@ -96,7 +102,7 @@ export default function BroadcastList({ onSelectBroadcast, setLoading, onQuit }:
           ))}
         </ScrollView>
       </Box>
-      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Broadcast  [r] Refresh  [q/Esc] Quit" />
+      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select  [o] Open in Browser  [r] Refresh  [q/Esc] Quit" />
     </Box>
   );
 }

@@ -49,15 +49,6 @@ export const PIECE_GRIDS: Record<PieceColor, Record<PieceType, string[][]>> = {
   },
 };
 
-const NARROW = "\uFE0E"
-const RESET = "\x1b[0m"
-
-const PIECE_MAP = {
-    "P": `\u265F${NARROW}${RESET}`,
-    "p": `\u265F${NARROW}${RESET}`,
-}
-
-
 export const PIECE_SYMBOLS: Record<PieceColor, Record<PieceType, string>> = {
   white: {
     king: ' ♚\u2002',
