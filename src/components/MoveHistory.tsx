@@ -4,11 +4,12 @@ import { Box, Text } from 'ink';
 interface MoveHistoryProps {
   moves?: string;
   currentMoveIndex?: number;
+  analysisStartIndex?: number;  // Index where analysis branched from main line
 }
 
 const MAX_DISPLAY_MOVES = 12;
 
-function MoveHistory({ moves, currentMoveIndex = 0 }: MoveHistoryProps) {
+function MoveHistory({ moves, currentMoveIndex = 0, analysisStartIndex = -1 }: MoveHistoryProps) {
   if (!moves) {
     return null;
   }
@@ -26,18 +27,30 @@ function MoveHistory({ moves, currentMoveIndex = 0 }: MoveHistoryProps) {
             const blackMoveNum = actualIndex * 2 + 2;
             const isWhiteActive = currentMoveIndex === whiteMoveNum;
             const isBlackActive = currentMoveIndex === blackMoveNum;
+            
+            // Determine if moves are analysis moves
+            const isWhiteAnalysis = analysisStartIndex >= 0 && whiteMoveNum > analysisStartIndex;
+            const isBlackAnalysis = analysisStartIndex >= 0 && blackMoveNum > analysisStartIndex;
 
             return (
               <Box key={actualIndex} flexDirection="row" gap={2}>
                 <Text color="white">
                   {actualIndex + 1}.{' '}
-                  <Text backgroundColor={isWhiteActive ? 'yellow' : undefined}>
+                  <Text 
+                    backgroundColor={isWhiteActive ? 'yellow' : undefined}
+                    color={isWhiteAnalysis ? 'magenta' : undefined}
+                    italic={isWhiteAnalysis}
+                  >
                     {pair.white || '...'}
                   </Text>
                 </Text>
                 {pair.black && (
                   <Text color="white">
-                    <Text backgroundColor={isBlackActive ? 'yellow' : undefined}>
+                    <Text 
+                      backgroundColor={isBlackActive ? 'yellow' : undefined}
+                      color={isBlackAnalysis ? 'magenta' : undefined}
+                      italic={isBlackAnalysis}
+                    >
                       {pair.black}
                     </Text>
                   </Text>

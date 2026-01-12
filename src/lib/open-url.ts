@@ -1,6 +1,24 @@
 import { platform } from 'os';
 import { spawn } from 'child_process';
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+export function formatBroadcastGameUrl(
+  tournamentName: string,
+  roundSlug: string,
+  gameId: string
+): string {
+  const tournamentSlug = slugify(tournamentName);
+  return `https://lichess.org/broadcast/${tournamentSlug}/${roundSlug}/${gameId}`;
+}
+
 export async function openUrl(url: string): Promise<void> {
   const osPlatform = platform();
   let command: string;

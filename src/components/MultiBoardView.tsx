@@ -6,6 +6,7 @@ import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import MiniBoard from './MiniBoard.js';
 import HelpBar from './HelpBar.js';
 import ScrollView, { truncateText } from './ScrollView.js';
+import { formatBroadcastGameUrl } from '../lib/open-url.js';
 
 interface MultiBoardViewProps {
   games: Game[];
@@ -13,6 +14,8 @@ interface MultiBoardViewProps {
   onSelectGame: (game: Game) => void;
   onBack: () => void;
   onOpen?: (url: string) => void;
+  tournamentName?: string;
+  roundSlug?: string;
 }
 
 const MINI_BOARD_WIDTH = 25;
@@ -127,6 +130,8 @@ export default function MultiBoardView({
   onSelectGame,
   onBack,
   onOpen,
+  tournamentName,
+  roundSlug,
 }: MultiBoardViewProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [forceListView, setForceListView] = useState(false);
@@ -183,7 +188,10 @@ export default function MultiBoardView({
       } else if (input === 'o' && onOpen) {
         const selectedGame = firstRowGames[selectedIndex];
         if (selectedGame?.id) {
-          onOpen(`https://lichess.org/${selectedGame.id}`);
+          const url = tournamentName && roundSlug
+            ? formatBroadcastGameUrl(tournamentName, roundSlug, selectedGame.id)
+            : `https://lichess.org/${selectedGame.id}`;
+          onOpen(url);
         }
       }
     } else {
@@ -203,7 +211,10 @@ export default function MultiBoardView({
       } else if (input === 'o' && onOpen) {
         const selectedGame = games[selectedIndex];
         if (selectedGame?.id) {
-          onOpen(`https://lichess.org/${selectedGame.id}`);
+          const url = tournamentName && roundSlug
+            ? formatBroadcastGameUrl(tournamentName, roundSlug, selectedGame.id)
+            : `https://lichess.org/${selectedGame.id}`;
+          onOpen(url);
         }
       }
     }

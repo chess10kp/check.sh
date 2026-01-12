@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback, memo } from "react";
-import { Box, useInput } from "ink";
+import { Box, Text, useInput } from "ink";
 import ChessBoard from "./ChessBoard.js";
 import PlayerInfo from "./PlayerInfo.js";
 import MoveHistory from "./MoveHistory.js";
@@ -9,6 +9,8 @@ import { Game, BroadcastPlayer } from "../types/index.js";
 import HelpBar from "./HelpBar.js";
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { addFavorite } from "../lib/cache.js";
+import { formatBroadcastGameUrl } from "../lib/open-url.js";
+import { useAnalysisMode } from "../hooks/useAnalysisMode.js";
 
 type FocusArea = "board" | "sidebar";
 
@@ -18,6 +20,8 @@ interface GameViewProps {
   onBack: () => void;
   onGameSelect: (game: Game) => void;
   onOpen?: (url: string) => void;
+  tournamentName?: string;
+  roundSlug?: string;
 }
 
 // Memoized board container to prevent re-renders when only border color changes
@@ -27,21 +31,40 @@ const BoardContainer = memo(
     currentFEN,
     lastMove,
     flipped,
+    isAnalyzing,
+    cursorSquare,
+    selectedSquare,
   }: {
     focus: FocusArea;
     currentFEN: string | undefined;
     lastMove: { from: string; to: string } | undefined;
     flipped: boolean;
+    isAnalyzing: boolean;
+    cursorSquare?: string;
+    selectedSquare?: string;
   }) {
     return (
       <Box
         flexDirection="column"
         borderStyle={focus === "board" ? "single" : "single"}
-        borderColor={focus === "board" ? "greenBright" : undefined}
+        borderColor={isAnalyzing ? "magenta" : focus === "board" ? "greenBright" : undefined}
         paddingX={2}
         marginX={1}
       >
-        {currentFEN && <ChessBoard fen={currentFEN} lastMove={lastMove} flipped={flipped} />}
+        {isAnalyzing && (
+          <Box justifyContent="center" marginBottom={1}>
+            <Text color="magenta" bold>ANALYSIS MODE</Text>
+          </Box>
+        )}
+        {currentFEN && (
+          <ChessBoard 
+            fen={currentFEN} 
+            lastMove={lastMove} 
+            flipped={flipped}
+            cursorSquare={isAnalyzing ? cursorSquare : undefined}
+            selectedSquare={isAnalyzing ? selectedSquare : undefined}
+          />
+        )}
       </Box>
     );
   },
@@ -53,6 +76,9 @@ const BoardContainer = memo(
     if (prev.lastMove?.from !== next.lastMove?.from) return false;
     if (prev.lastMove?.to !== next.lastMove?.to) return false;
     if (prev.flipped !== next.flipped) return false;
+    if (prev.isAnalyzing !== next.isAnalyzing) return false;
+    if (prev.cursorSquare !== next.cursorSquare) return false;
+    if (prev.selectedSquare !== next.selectedSquare) return false;
     return true;
   }
 );
@@ -67,6 +93,7 @@ const RightPanelContainer = memo(
     game,
     currentFEN,
     flipped,
+    analysisStartIndex,
   }: {
     whitePlayer: BroadcastPlayer | undefined;
     blackPlayer: BroadcastPlayer | undefined;
@@ -75,6 +102,7 @@ const RightPanelContainer = memo(
     game: Game;
     currentFEN: string | undefined;
     flipped: boolean;
+    analysisStartIndex: number;
   }) {
     const topPlayer = flipped ? whitePlayer : blackPlayer;
     const bottomPlayer = flipped ? blackPlayer : whitePlayer;
@@ -94,7 +122,11 @@ const RightPanelContainer = memo(
         </Box>
 
         <Box marginTop={1} flexGrow={1}>
-          <MoveHistory moves={moves} currentMoveIndex={currentMoveIndex} />
+          <MoveHistory 
+            moves={moves} 
+            currentMoveIndex={currentMoveIndex}
+            analysisStartIndex={analysisStartIndex}
+          />
         </Box>
         <StockfishEval fen={currentFEN} />
 
@@ -123,6 +155,7 @@ const RightPanelContainer = memo(
     if (prev.currentFEN !== next.currentFEN) return false;
     if (prev.game.status !== next.game.status) return false;
     if (prev.flipped !== next.flipped) return false;
+    if (prev.analysisStartIndex !== next.analysisStartIndex) return false;
     return true;
   }
 );
@@ -133,10 +166,9 @@ export default function GameView({
   onBack,
   onGameSelect,
   onOpen,
+  tournamentName,
+  roundSlug,
 }: GameViewProps) {
-  const [currentMoveIndex, setCurrentMoveIndex] = useState(
-    game.currentMoveIndex ?? 0
-  );
   const [focus, setFocus] = useState<FocusArea>("board");
   const [sidebarSelectedIndex, setSidebarSelectedIndex] = useState(0);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "exists">(
@@ -164,37 +196,52 @@ export default function GameView({
     setSidebarSelectedIndex(viewedGameIndex);
   }, [viewedGameIndex]);
 
-  useEffect(() => {
-    setCurrentMoveIndex(game.currentMoveIndex ?? 0);
-  }, [game.id]);
-
   const whitePlayer = useMemo(() => game.players[0], [game.players]);
   const blackPlayer = useMemo(() => game.players[1], [game.players]);
 
-  const currentFEN = useMemo(
-    () => game.fenHistory?.[currentMoveIndex] ?? game.fen ?? undefined,
-    [game.fenHistory, game.fen, currentMoveIndex]
-  );
+  // Analysis mode hook
+  const analysis = useAnalysisMode({
+    initialFenHistory: game.fenHistory ?? [],
+    initialMoveHistory: game.moveHistory ?? [],
+    initialMoveIndex: game.currentMoveIndex ?? 0,
+    flipped,
+  });
 
-  const canGoNext = useMemo(
-    () =>
-      game.fenHistory ? currentMoveIndex < game.fenHistory.length - 1 : false,
-    [game.fenHistory, currentMoveIndex]
-  );
+  // Reset analysis when game changes
+  useEffect(() => {
+    if (analysis.state.isAnalyzing) {
+      analysis.exitAnalysis();
+    }
+    analysis.goToMove(game.currentMoveIndex ?? 0);
+  }, [game.id]);
+
+  const currentFEN = analysis.currentFen;
+  const currentMoveIndex = analysis.state.currentMoveIndex;
+
+  // Compute canGoNext and canGoPrevious based on analysis state
+  const canGoNext = useMemo(() => {
+    if (analysis.state.isAnalyzing) {
+      const maxIndex = analysis.state.analysisStartIndex + analysis.state.analysisMoves.length;
+      return currentMoveIndex < maxIndex;
+    }
+    return game.fenHistory ? currentMoveIndex < game.fenHistory.length - 1 : false;
+  }, [game.fenHistory, currentMoveIndex, analysis.state]);
+
   const canGoPrevious = currentMoveIndex > 0;
 
   // Memoize the shortcuts text to prevent HelpBar re-renders
-  const boardShortcuts = useMemo(
-    () =>
-      `[n/→] Next | [p/←] Prev | [f] Flip | [s] Save | [o] Open | [Tab] Sidebar | [q] Return${
-        saveStatus === "saved"
-          ? " ✓ Saved!"
-          : saveStatus === "exists"
-          ? " (already saved)"
-          : ""
-      }`,
-    [saveStatus]
-  );
+  const boardShortcuts = useMemo(() => {
+    if (analysis.state.isAnalyzing) {
+      return `[Arrows] Move cursor | [Enter] Select | [n/p] Nav | [f] Flip | [Esc] Exit analysis`;
+    }
+    return `[a] Analyze | [n/→] Next | [p/←] Prev | [f] Flip | [s] Save | [o] Open | [Tab] Sidebar | [q] Return${
+      saveStatus === "saved"
+        ? " ✓ Saved!"
+        : saveStatus === "exists"
+        ? " (already saved)"
+        : ""
+    }`;
+  }, [saveStatus, analysis.state.isAnalyzing]);
 
   const sidebarShortcuts =
     "[↑/k] Up | [↓/j] Down | [Enter] Select | [Tab] Board | [q] Return";
@@ -208,6 +255,17 @@ export default function GameView({
     undefined
   );
   const lastMove = useMemo(() => {
+    // In analysis mode, use analysis moves if applicable
+    if (analysis.state.isAnalyzing && currentMoveIndex > analysis.state.analysisStartIndex) {
+      const analysisIdx = currentMoveIndex - analysis.state.analysisStartIndex - 1;
+      const analysisMove = analysis.state.analysisMoves[analysisIdx];
+      if (analysisMove) {
+        const from = analysisMove.uci.substring(0, 2);
+        const to = analysisMove.uci.substring(2, 4);
+        return { from, to };
+      }
+    }
+
     const currentMoveStr = game.moveHistory?.[currentMoveIndex];
     if (!currentMoveStr) {
       if (lastMoveRef.current === undefined) {
@@ -229,7 +287,15 @@ export default function GameView({
     }
     lastMoveRef.current = newLastMove;
     return newLastMove;
-  }, [game.moveHistory, currentMoveIndex]);
+  }, [game.moveHistory, currentMoveIndex, analysis.state]);
+
+  // Combined moves string for display
+  const displayMoves = useMemo(() => {
+    if (analysis.state.isAnalyzing && analysis.state.analysisMoves.length > 0) {
+      return analysis.combinedMoves;
+    }
+    return game.moves;
+  }, [game.moves, analysis.state, analysis.combinedMoves]);
 
   const handleSave = useCallback(() => {
     addFavorite(game).then((added) => {
@@ -245,15 +311,71 @@ export default function GameView({
     }
     lastInputTime.current = now;
 
+    // Analysis mode input handling
+    if (analysis.state.isAnalyzing && focus === "board") {
+      // Exit analysis with Escape
+      if (key.escape) {
+        analysis.exitAnalysis();
+        return;
+      }
+
+      // Cursor movement with arrow keys
+      if (key.upArrow) {
+        analysis.moveCursor('up');
+        return;
+      }
+      if (key.downArrow) {
+        analysis.moveCursor('down');
+        return;
+      }
+      if (key.leftArrow) {
+        analysis.moveCursor('left');
+        return;
+      }
+      if (key.rightArrow) {
+        analysis.moveCursor('right');
+        return;
+      }
+
+      // Select square with Enter
+      if (key.return) {
+        analysis.selectSquare();
+        return;
+      }
+
+      // Navigate history with n/p
+      if (input === 'n') {
+        analysis.nextMove();
+        return;
+      }
+      if (input === 'p') {
+        analysis.prevMove();
+        return;
+      }
+
+      // Flip board
+      if (input === 'f') {
+        setFlipped((prev) => !prev);
+        return;
+      }
+
+      // Don't process other keys in analysis mode
+      return;
+    }
+
+    // Normal mode input handling
     if (input === "q") {
       onBack();
+    } else if (input === "a" && focus === "board") {
+      // Enter analysis mode
+      analysis.enterAnalysis();
     } else if (input === "n" || key.rightArrow) {
       if (focus === "board" && canGoNext) {
-        setCurrentMoveIndex(currentMoveIndex + 1);
+        analysis.nextMove();
       }
     } else if (input === "p" || key.leftArrow) {
       if (focus === "board" && canGoPrevious) {
-        setCurrentMoveIndex(currentMoveIndex - 1);
+        analysis.prevMove();
       }
     } else if (key.tab) {
       setFocus((prev) => (prev === "board" ? "sidebar" : "board"));
@@ -263,7 +385,10 @@ export default function GameView({
       setFlipped((prev) => !prev);
     } else if (input === "o" && onOpen) {
       if (game.id) {
-        onOpen(`https://lichess.org/${game.id}`);
+        const url = tournamentName && roundSlug
+          ? formatBroadcastGameUrl(tournamentName, roundSlug, game.id)
+          : `https://lichess.org/${game.id}`;
+        onOpen(url);
       }
     } else if (focus === "sidebar") {
       if (key.upArrow || input === "k") {
@@ -292,8 +417,19 @@ export default function GameView({
               />
             )}
             <Box flexDirection="column" paddingX={2}>
+              {analysis.state.isAnalyzing && (
+                <Box justifyContent="center">
+                  <Text color="magenta" bold>ANALYSIS MODE</Text>
+                </Box>
+              )}
               {currentFEN && (
-                <ChessBoard fen={currentFEN} lastMove={lastMove} flipped={flipped} />
+                <ChessBoard 
+                  fen={currentFEN} 
+                  lastMove={lastMove} 
+                  flipped={flipped}
+                  cursorSquare={analysis.state.isAnalyzing ? analysis.state.cursorSquare : undefined}
+                  selectedSquare={analysis.state.isAnalyzing ? analysis.state.selectedSquare ?? undefined : undefined}
+                />
               )}
             </Box>
             {(flipped ? blackPlayer : whitePlayer) && (
@@ -318,16 +454,20 @@ export default function GameView({
               currentFEN={currentFEN}
               lastMove={lastMove}
               flipped={flipped}
+              isAnalyzing={analysis.state.isAnalyzing}
+              cursorSquare={analysis.state.cursorSquare}
+              selectedSquare={analysis.state.selectedSquare ?? undefined}
             />
 
             <RightPanelContainer
               whitePlayer={whitePlayer}
               blackPlayer={blackPlayer}
-              moves={game.moves}
+              moves={displayMoves}
               currentMoveIndex={currentMoveIndex}
               game={game}
               currentFEN={currentFEN}
               flipped={flipped}
+              analysisStartIndex={analysis.state.analysisStartIndex}
             />
           </Box>
         )}

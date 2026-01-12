@@ -29,6 +29,7 @@ export default function App() {
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
   const [games, setGames] = useState<Game[]>([]);
   const [roundName, setRoundName] = useState<string>('');
+  const [roundSlug, setRoundSlug] = useState<string>('');
   const [resizeKey, setResizeKey] = useState(0);
 
   useEffect(() => {
@@ -86,6 +87,7 @@ export default function App() {
   const handleSelectRound = async (round: BroadcastRound) => {
     setLoadingGames(true);
     setRoundName(round.name);
+    setRoundSlug(round.slug || round.name);
 
     try {
       let fullPgn = '';
@@ -166,6 +168,8 @@ export default function App() {
           onSelectGame={handleSelectGame}
           onBack={handleBackToRounds}
           onOpen={openUrl}
+          tournamentName={selectedBroadcast?.tour.name}
+          roundSlug={roundSlug}
         />
       ) : selectedGame ? (
         <GameView
@@ -174,6 +178,8 @@ export default function App() {
           onBack={handleBackToRounds}
           onGameSelect={handleGameSelectInView}
           onOpen={openUrl}
+          tournamentName={selectedBroadcast?.tour.name}
+          roundSlug={roundSlug}
         />
       ) : null}
     </Box>

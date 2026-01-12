@@ -12,6 +12,8 @@ interface ChessBoardProps {
   fen: string;
   lastMove?: { from: string; to: string };
   flipped?: boolean;
+  cursorSquare?: string;
+  selectedSquare?: string;
 }
 
 interface Square {
@@ -23,20 +25,31 @@ interface CompactSquareProps {
   square: Square;
   isWhiteSquare: boolean;
   isLastMove: boolean;
+  isCursor: boolean;
+  isSelected: boolean;
 }
 
-function CompactSquare({ square, isWhiteSquare, isLastMove }: CompactSquareProps) {
+function CompactSquare({ square, isWhiteSquare, isLastMove, isCursor, isSelected }: CompactSquareProps) {
   const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
   const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
   const symbol = square.piece
     ? getPieceSymbol(square.piece.color, square.piece.type, 'compact')
     : '\n       \n        ';
 
+  let effectiveBgColor = bgColor;
+  if (isSelected) {
+    effectiveBgColor = 'blue';
+  } else if (isCursor) {
+    effectiveBgColor = 'cyan';
+  } else if (isLastMove) {
+    effectiveBgColor = defaultTheme.highlight;
+  }
+
   return (
     <Box
       width={CELL_WIDTH}
       justifyContent="center"
-      backgroundColor={isLastMove ? defaultTheme.highlight : bgColor}
+      backgroundColor={effectiveBgColor}
     >
       <Text color={pieceColor}>
         {symbol}
@@ -53,7 +66,12 @@ interface CompactBoardRowProps {
   flipped?: boolean;
 }
 
-const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo, flipped = false }: CompactBoardRowProps) {
+interface CompactBoardRowPropsWithCursor extends CompactBoardRowProps {
+  cursorSquare?: string;
+  selectedSquare?: string;
+}
+
+const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo, flipped = false, cursorSquare, selectedSquare }: CompactBoardRowPropsWithCursor) {
   const rank = flipped ? rankIndex + 1 : 8 - rankIndex;
   return (
     <Box flexDirection="row">
@@ -64,6 +82,8 @@ const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMove
         const file = String.fromCharCode(97 + fileIndex);
         const isWhiteSquare = (rankIndex + fileIndex) % 2 === 0;
         const isLastMove = lastMoveFrom === square.position || lastMoveTo === square.position;
+        const isCursor = cursorSquare === square.position;
+        const isSelected = selectedSquare === square.position;
 
         return (
           <CompactSquare
@@ -71,13 +91,17 @@ const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMove
             square={square}
             isWhiteSquare={isWhiteSquare}
             isLastMove={isLastMove}
+            isCursor={isCursor}
+            isSelected={isSelected}
           />
         );
       })}
     </Box>
   );
-}, (prev, next) => {
+}, (prev: CompactBoardRowPropsWithCursor, next: CompactBoardRowPropsWithCursor) => {
   if (prev.rankIndex !== next.rankIndex) return false;
+  if (prev.cursorSquare !== next.cursorSquare) return false;
+  if (prev.selectedSquare !== next.selectedSquare) return false;
   
   const rank = String(8 - prev.rankIndex);
   const prevAffectsRank = prev.lastMoveFrom?.[1] === rank || prev.lastMoveTo?.[1] === rank;
@@ -98,9 +122,11 @@ interface SmallBoardRowProps {
   lastMoveFrom?: string;
   lastMoveTo?: string;
   flipped?: boolean;
+  cursorSquare?: string;
+  selectedSquare?: string;
 }
 
-const SmallBoardRow = memo(function SmallBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo, flipped = false }: SmallBoardRowProps) {
+const SmallBoardRow = memo(function SmallBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo, flipped = false, cursorSquare, selectedSquare }: SmallBoardRowProps) {
   const rank = flipped ? rankIndex + 1 : 8 - rankIndex;
   
   return (
@@ -112,6 +138,8 @@ const SmallBoardRow = memo(function SmallBoardRow({ row, rankIndex, lastMoveFrom
         const isWhiteSquare = (rankIndex + fileIndex) % 2 === 0;
         const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
         const isLastMove = lastMoveFrom === square.position || lastMoveTo === square.position;
+        const isCursor = cursorSquare === square.position;
+        const isSelected = selectedSquare === square.position;
         
         let content = ' ';
         if (square.piece) {
@@ -120,16 +148,27 @@ const SmallBoardRow = memo(function SmallBoardRow({ row, rankIndex, lastMoveFrom
         
         const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
 
+        let effectiveBgColor = bgColor;
+        if (isSelected) {
+          effectiveBgColor = 'blue';
+        } else if (isCursor) {
+          effectiveBgColor = 'cyan';
+        } else if (isLastMove) {
+          effectiveBgColor = defaultTheme.highlight;
+        }
+
         return (
-          <Box key={square.position} width={SMALL_CELL_WIDTH} backgroundColor={isLastMove ? defaultTheme.highlight : bgColor}>
+          <Box key={square.position} width={SMALL_CELL_WIDTH} backgroundColor={effectiveBgColor}>
             <Text color={pieceColor}>{content}</Text>
           </Box>
         );
       })}
     </Box>
   );
-}, (prev, next) => {
+}, (prev: SmallBoardRowProps, next: SmallBoardRowProps) => {
   if (prev.rankIndex !== next.rankIndex) return false;
+  if (prev.cursorSquare !== next.cursorSquare) return false;
+  if (prev.selectedSquare !== next.selectedSquare) return false;
   
   const rank = String(8 - prev.rankIndex);
   const prevAffectsRank = prev.lastMoveFrom?.[1] === rank || prev.lastMoveTo?.[1] === rank;
@@ -263,7 +302,7 @@ const PixelArtBoard = memo(function PixelArtBoard({ squares, lastMove, flipped =
   );
 });
 
-function ChessBoard({ fen, lastMove, flipped = false }: ChessBoardProps) {
+function ChessBoard({ fen, lastMove, flipped = false, cursorSquare, selectedSquare }: ChessBoardProps) {
   const { width: terminalWidth, height: terminalHeight } = useTerminalSize(150);
 
   const pieceSize = useMemo((): PieceSize => {
@@ -353,6 +392,8 @@ function ChessBoard({ fen, lastMove, flipped = false }: ChessBoardProps) {
               lastMoveFrom={lastMoveFrom}
               lastMoveTo={lastMoveTo}
               flipped={flipped}
+              cursorSquare={cursorSquare}
+              selectedSquare={selectedSquare}
             />
           );
         })}
@@ -383,6 +424,8 @@ function ChessBoard({ fen, lastMove, flipped = false }: ChessBoardProps) {
             lastMoveFrom={lastMoveFrom}
             lastMoveTo={lastMoveTo}
             flipped={flipped}
+            cursorSquare={cursorSquare}
+            selectedSquare={selectedSquare}
           />
         );
       })}
@@ -448,5 +491,7 @@ export default memo(ChessBoard, (prev, next) => {
   if (prev.lastMove?.from !== next.lastMove?.from) return false;
   if (prev.lastMove?.to !== next.lastMove?.to) return false;
   if (prev.flipped !== next.flipped) return false;
+  if (prev.cursorSquare !== next.cursorSquare) return false;
+  if (prev.selectedSquare !== next.selectedSquare) return false;
   return true;
 });
