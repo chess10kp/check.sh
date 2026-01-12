@@ -65,7 +65,7 @@ export const PIECE_SYMBOLS: Record<PieceColor, Record<PieceType, string>> = {
     rook: ' ♜\u2002',
     bishop: ' ♝\u2002',
     knight: ' ♞\u2002',
-    pawn: ` ${ PIECE_MAP["P"] }`,
+    pawn: `♙`,
   },
   black: {
     king: ' ♚\u2002',
@@ -73,7 +73,7 @@ export const PIECE_SYMBOLS: Record<PieceColor, Record<PieceType, string>> = {
     rook: ' ♜\u2002',
     bishop: ' ♝\u2002',
     knight: ' ♞\u2002',
-    pawn: ` ${PIECE_MAP["p"]}`,
+    pawn: `♙`,
   },
 };
     
@@ -98,6 +98,9 @@ export const COMPACT_PIECES: Record<PieceColor, Record<PieceType, string>> = {
 
 export function getPieceSymbol(color: PieceColor, type: PieceType, size: PieceSize = 'small'): string {
   if (size === 'small') {
+    if (type == 'pawn') {
+      return ` ${PIECE_SYMBOLS[color][type]}`
+    }
     return PIECE_SYMBOLS[color][type];
   }
   return COMPACT_PIECES[color][type];

@@ -127,12 +127,15 @@ export default function MultiBoardView({
   onBack,
 }: MultiBoardViewProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [forceListView, setForceListView] = useState(false);
   const { width: terminalWidth, height: terminalHeight } = useTerminalSize(150);
 
-  const useMultiBoardLayout = useMemo(() => {
+  const canUseMultiBoardLayout = useMemo(() => {
     return terminalWidth >= MIN_WIDTH_FOR_MULTI_BOARD && 
            terminalHeight >= MIN_HEIGHT_FOR_MULTI_BOARD;
   }, [terminalWidth, terminalHeight]);
+
+  const useMultiBoardLayout = canUseMultiBoardLayout && !forceListView;
 
   const boardsPerRow = useMemo(() => {
     if (!useMultiBoardLayout) return 1;
@@ -149,32 +152,27 @@ export default function MultiBoardView({
     return Math.max(5, terminalHeight - APP_HEADER_HEIGHT - LOCAL_HEADER_HEIGHT - SUBHEADER_HEIGHT - PADDING - HELPBAR_HEIGHT);
   }, [terminalHeight]);
 
+  const firstRowGames = useMemo(() => {
+    if (!useMultiBoardLayout) return [];
+    return games.slice(0, boardsPerRow);
+  }, [games, boardsPerRow, useMultiBoardLayout]);
+
+  const hasMoreGames = games.length > boardsPerRow;
+
   useInput((input, key) => {
     if (useMultiBoardLayout) {
-      const currentRow = Math.floor(selectedIndex / boardsPerRow);
-      const currentCol = selectedIndex % boardsPerRow;
-      const totalRows = Math.ceil(games.length / boardsPerRow);
-
-      if (key.upArrow || input === 'k') {
-        if (currentRow > 0) {
-          const newIndex = (currentRow - 1) * boardsPerRow + currentCol;
-          setSelectedIndex(Math.min(newIndex, games.length - 1));
-        }
-      } else if (key.downArrow || input === 'j') {
-        if (currentRow < totalRows - 1) {
-          const newIndex = (currentRow + 1) * boardsPerRow + currentCol;
-          setSelectedIndex(Math.min(newIndex, games.length - 1));
-        }
-      } else if (key.leftArrow || input === 'h') {
+      if (key.leftArrow || input === 'h') {
         if (selectedIndex > 0) {
           setSelectedIndex(selectedIndex - 1);
         }
       } else if (key.rightArrow || input === 'l') {
-        if (selectedIndex < games.length - 1) {
+        if (selectedIndex < firstRowGames.length - 1) {
           setSelectedIndex(selectedIndex + 1);
         }
+      } else if (input === 't') {
+        setForceListView(v => !v);
       } else if (key.return) {
-        const selectedGame = games[selectedIndex];
+        const selectedGame = firstRowGames[selectedIndex];
         if (selectedGame) {
           onSelectGame(selectedGame);
         }
@@ -186,6 +184,8 @@ export default function MultiBoardView({
         setSelectedIndex(i => Math.max(0, i - 1));
       } else if (key.downArrow || input === 'j') {
         setSelectedIndex(i => Math.min(games.length - 1, i + 1));
+      } else if (input === 't' && canUseMultiBoardLayout) {
+        setForceListView(v => !v);
       } else if (key.return) {
         const selectedGame = games[selectedIndex];
         if (selectedGame) {
@@ -196,15 +196,6 @@ export default function MultiBoardView({
       }
     }
   });
-
-  const gameRows = useMemo(() => {
-    if (!useMultiBoardLayout) return [];
-    const rows: Game[][] = [];
-    for (let i = 0; i < games.length; i += boardsPerRow) {
-      rows.push(games.slice(i, i + boardsPerRow));
-    }
-    return rows;
-  }, [games, boardsPerRow, useMultiBoardLayout]);
 
   const maxNameWidth = useMultiBoardLayout ? 12 : 40;
 
@@ -234,21 +225,23 @@ export default function MultiBoardView({
 
         {useMultiBoardLayout ? (
           <Box flexDirection="column" overflow="hidden">
-            {gameRows.map((row, rowIndex) => (
-              <Box key={`row-${rowIndex}`} flexDirection="row" gap={1}>
-                {row.map((game, colIndex) => {
-                  const gameIndex = rowIndex * boardsPerRow + colIndex;
-                  return (
-                    <GameCard
-                      key={game.id || gameIndex}
-                      game={game}
-                      isSelected={gameIndex === selectedIndex}
-                      maxNameWidth={maxNameWidth}
-                    />
-                  );
-                })}
+            <Box flexDirection="row" gap={1}>
+              {firstRowGames.map((game, index) => (
+                <GameCard
+                  key={game.id || index}
+                  game={game}
+                  isSelected={index === selectedIndex}
+                  maxNameWidth={maxNameWidth}
+                />
+              ))}
+            </Box>
+            {hasMoreGames && (
+              <Box marginTop={1}>
+                <Text color="gray">
+                  Showing {firstRowGames.length} of {games.length} games. Press [t] for all games.
+                </Text>
               </Box>
-            ))}
+            )}
           </Box>
         ) : (
           <ListView
@@ -262,8 +255,8 @@ export default function MultiBoardView({
       <HelpBar 
         shortcuts={
           useMultiBoardLayout 
-            ? "[←/h] [↓/j] [↑/k] [→/l] Navigate  [Enter] Select  [q/Esc] Back"
-            : "[↑/k] Up  [↓/j] Down  [Enter] Select  [q/Esc] Back"
+            ? "[←/h] [→/l] Navigate  [Enter] Select  [t] List View  [q/Esc] Back"
+            : `[↑/k] Up  [↓/j] Down  [Enter] Select  ${canUseMultiBoardLayout ? '[t] Board View  ' : ''}[q/Esc] Back`
         } 
       />
     </Box>

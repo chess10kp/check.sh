@@ -54,7 +54,7 @@ interface CompactBoardRowProps {
 const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo }: CompactBoardRowProps) {
   return (
     <Box flexDirection="row">
-      <Box width={1} justifyContent="center">
+      <Box width={1} justifyContent="center" paddingRight={1}>
         <Text color="gray">{8 - rankIndex}</Text>
       </Box>
       {row.map((square, fileIndex) => {
@@ -101,7 +101,7 @@ const SmallBoardRow = memo(function SmallBoardRow({ row, rankIndex, lastMoveFrom
   
   return (
     <Box flexDirection="row">
-      <Box width={1} justifyContent="center">
+      <Box width={1} justifyContent="center" paddingRight={1}>
         <Text color="gray">{rank}</Text>
       </Box>
       {row.map((square, fileIndex) => {
@@ -222,16 +222,16 @@ const PixelArtBoard = memo(function PixelArtBoard({ squares, lastMove }: PixelAr
       {squares.map((row, rankIndex) => {
         const rank = 8 - rankIndex;
 
-        return (
-          <Box key={`rank-${rank}`} flexDirection="column">
-            {Array.from({ length: PIECE_HEIGHT }).map((_, pixelRow) => (
-              <Box key={`rank-${rank}-pixel-${pixelRow}`} flexDirection="row">
-                {pixelRow === 0 && (
-                  <Box width={1} justifyContent="center">
-                    <Text color="gray">{rank}</Text>
-                  </Box>
-                )}
-                {pixelRow > 0 && <Box width={1} />}
+          return (
+            <Box key={`rank-${rank}`} flexDirection="column">
+              {Array.from({ length: PIECE_HEIGHT }).map((_, pixelRow) => (
+                <Box key={`rank-${rank}-pixel-${pixelRow}`} flexDirection="row">
+                  {pixelRow === 0 && (
+                    <Box width={1} justifyContent="center" paddingRight={1}>
+                      <Text color="gray">{rank}</Text>
+                    </Box>
+                  )}
+                  {pixelRow > 0 && <Box width={2} />}
                 <PixelArtSquareRow
                   key={`rank-${rank}-row-${pixelRow}`}
                   squares={row}
@@ -344,7 +344,7 @@ function ChessBoard({ fen, lastMove }: ChessBoardProps) {
         })}
         <Box flexDirection="row">
           <Box width={1} />
-          {'abcdefgh'.split('').map(file => (
+          {'abcdefgh'.split('').map((file) => (
             <Box key={file} width={SMALL_CELL_WIDTH} justifyContent="center">
               <Text color="gray">{file}</Text>
             </Box>
