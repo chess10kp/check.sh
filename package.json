@@ -1,9 +1,11 @@
 {
 	"name": "check.sh",
-	"version": "1.0.0",
-	"description": "Terminal User Interface (TUI) application for viewing live chess games from Lichess broadcasts",
+	"version": "0.0.1",
+	"description": "TUI for viewing live chess games from Lichess broadcasts",
 	"license": "MIT",
-	"bin": "dist/index.js",
+	"bin":  {
+    "check.sh": "dist/index.js"
+  },
 	"type": "module",
 	"engines": {
 		"bun": ">=1.0.0"

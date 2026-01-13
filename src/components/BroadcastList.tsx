@@ -9,12 +9,13 @@ import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
 interface BroadcastListProps {
   onSelectBroadcast: (broadcast: Broadcast) => void;
+  onSelectSavedGames?: () => void;
   setLoading?: (loading: boolean) => void;
   onQuit?: () => void;
   onOpen?: (url: string) => void;
 }
 
-export default function BroadcastList({ onSelectBroadcast, setLoading, onQuit, onOpen }: BroadcastListProps) {
+export default function BroadcastList({ onSelectBroadcast, onSelectSavedGames, setLoading, onQuit, onOpen }: BroadcastListProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { broadcasts, loading, error, refresh } = useBroadcasts();
   const { height: terminalHeight } = useTerminalSize(150);
@@ -38,17 +39,21 @@ export default function BroadcastList({ onSelectBroadcast, setLoading, onQuit, o
     setSelectedIndex(0);
   }, [broadcasts]);
 
+  const totalItems = broadcasts.length + 1;
+
   useInput((input, key) => {
     if (key.upArrow || input === 'k') {
       setSelectedIndex(i => Math.max(0, i - 1));
     } else if (key.downArrow || input === 'j') {
-      setSelectedIndex(i => Math.min(broadcasts.length - 1, i + 1));
+      setSelectedIndex(i => Math.min(totalItems - 1, i + 1));
     } else if (key.return) {
-      if (broadcasts.length === 0) {
+      if (selectedIndex === 0) {
+        onSelectSavedGames?.();
         return;
       }
 
-      const selected = broadcasts[selectedIndex];
+      const broadcastIndex = selectedIndex - 1;
+      const selected = broadcasts[broadcastIndex];
       if (selected) {
         onSelectBroadcast(selected);
       }
@@ -60,7 +65,9 @@ export default function BroadcastList({ onSelectBroadcast, setLoading, onQuit, o
     } else if (input === 'q') {
       onQuit?.();
     } else if (input === 'o' && onOpen) {
-      const selected = broadcasts[selectedIndex];
+      if (selectedIndex === 0) return;
+      const broadcastIndex = selectedIndex - 1;
+      const selected = broadcasts[broadcastIndex];
       if (selected) {
         onOpen(selected.tour.url);
       }
@@ -85,21 +92,34 @@ export default function BroadcastList({ onSelectBroadcast, setLoading, onQuit, o
           height={scrollViewHeight}
           selectedIndex={selectedIndex}
         >
-          {broadcasts.map((broadcast, index) => (
-            <Box
-              key={broadcast.tour.id}
-              backgroundColor={index === selectedIndex ? defaultTheme.highlight : undefined}
-              paddingX={1}
-            >
-              <Text>
-                {index === selectedIndex ? '▶ ' : '  '}
-                {truncateText(broadcast.tour.name, maxNameWidth)}
-                {broadcast.rounds && broadcast.rounds[0] && (
-                  <Text color="gray"> - {truncateText(broadcast.rounds[0].name, 20)}</Text>
-                )}
-              </Text>
-            </Box>
-          ))}
+          <Box
+            key="saved-games"
+            backgroundColor={selectedIndex === 0 ? defaultTheme.highlight : undefined}
+            paddingX={1}
+          >
+            <Text>
+              {selectedIndex === 0 ? '▶ ' : '  '}
+              <Text color="magenta" bold>★ Saved Games</Text>
+            </Text>
+          </Box>
+          {broadcasts.map((broadcast, index) => {
+            const itemIndex = index + 1;
+            return (
+              <Box
+                key={broadcast.tour.id}
+                backgroundColor={itemIndex === selectedIndex ? defaultTheme.highlight : undefined}
+                paddingX={1}
+              >
+                <Text>
+                  {itemIndex === selectedIndex ? '▶ ' : '  '}
+                  {truncateText(broadcast.tour.name, maxNameWidth)}
+                  {broadcast.rounds && broadcast.rounds[0] && (
+                    <Text color="gray"> - {truncateText(broadcast.rounds[0].name, 20)}</Text>
+                  )}
+                </Text>
+              </Box>
+            );
+          })}
         </ScrollView>
       </Box>
       <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select  [o] Open in Browser  [r] Refresh  [q/Esc] Quit" />

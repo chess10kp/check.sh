@@ -2,12 +2,28 @@ export interface Broadcast {
   tour: {
     id: string;
     name: string;
-    description: string;
+    slug?: string;
+    description?: string;
     url: string;
-    markdown: string;
+    markdown?: string;
     tier: "official" | "high" | "medium" | "low";
+    info?: {
+      format?: string;
+      tc?: string;
+      fideTc?: string;
+      location?: string;
+      timeZone?: string;
+      players?: string;
+      website?: string;
+      standings?: string;
+    };
+    createdAt?: number;
+    dates?: number[];
+    image?: string;
+    teamTable?: boolean;
   };
   rounds: BroadcastRound[];
+  defaultRoundId?: string;
 }
 
 export interface BroadcastRound {
@@ -17,6 +33,15 @@ export interface BroadcastRound {
   url?: string;
   startsAt?: number;
   finished?: boolean;
+  createdAt?: number;
+  rated?: boolean;
+  finishedAt?: number;
+  ongoing?: boolean;
+  customScoring?: {
+    white?: { win: number; draw: number };
+    black?: { win: number; draw: number };
+  };
+  startsAfterPrevious?: boolean;
 }
 
 export interface LeaderboardPlayer {
@@ -71,7 +96,7 @@ export type GameStatus =
   | "timeout"
   | "outoftime";
 
-export type ViewState = "broadcast-list" | "rounds-list" | "games-list" | "game-view";
+export type ViewState = "broadcast-list" | "rounds-list" | "games-list" | "game-view" | "saved-games";
 
 export interface ErrorState {
   message: string;

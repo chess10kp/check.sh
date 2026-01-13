@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Box, useApp, useInput } from 'ink';
 import BroadcastList from './components/BroadcastList.js';
 import RoundsList from './components/RoundsList.js';
 import MultiBoardView from './components/MultiBoardView.js';
 import GameView from './components/GameView.js';
+import SavedGamesView from './components/SavedGamesView.js';
 import Header from './components/Header.js';
 import { ViewState, Broadcast, Game } from './types/index.js';
 import { streamRoundPGN } from './lib/lichess-api.js';
@@ -30,33 +31,6 @@ export default function App() {
   const [games, setGames] = useState<Game[]>([]);
   const [roundName, setRoundName] = useState<string>('');
   const [roundSlug, setRoundSlug] = useState<string>('');
-  const [resizeKey, setResizeKey] = useState(0);
-
-  useEffect(() => {
-    const resizeTimeoutRef = { current: null as NodeJS.Timeout | null };
-    const handleResize = () => {
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-      resizeTimeoutRef.current = setTimeout(() => {
-        process.stdout.write('\x1B[2J\x1B[H');
-        setResizeKey(prev => prev + 1);
-      }, 100);
-    };
-
-    process.stdout.on('resize', handleResize);
-
-    return () => {
-      process.stdout.off('resize', handleResize);
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    resizeKey;
-  }, [resizeKey]);
 
   const handleBackToList = useCallback(() => {
     setSelectedGame(null);
@@ -67,6 +41,26 @@ export default function App() {
   const handleSelectBroadcast = useCallback((broadcast: Broadcast) => {
     setSelectedBroadcast(broadcast);
     setViewState('rounds-list');
+  }, []);
+
+  const handleSelectSavedGames = useCallback(() => {
+    setViewState('saved-games');
+  }, []);
+
+  const handleBackFromSavedGames = useCallback(() => {
+    setViewState('broadcast-list');
+  }, []);
+
+  const handleSelectSavedGame = useCallback((game: Game) => {
+    setSelectedGame(game);
+    setGames([game]);
+    setViewState('game-view');
+  }, []);
+
+  const handleBackFromSavedGameView = useCallback(() => {
+    setSelectedGame(null);
+    setGames([]);
+    setViewState('saved-games');
   }, []);
 
   const handleBackToRounds = useCallback(() => {
@@ -148,14 +142,21 @@ export default function App() {
       {viewState === 'broadcast-list' ? (
         <BroadcastList
           onSelectBroadcast={handleSelectBroadcast}
+          onSelectSavedGames={handleSelectSavedGames}
           setLoading={setLoading}
           onQuit={exit}
           onOpen={(url: string) => openUrl(url)}
+        />
+      ) : viewState === 'saved-games' ? (
+        <SavedGamesView
+          onSelectGame={handleSelectSavedGame}
+          onBack={handleBackFromSavedGames}
         />
       ) : viewState === 'rounds-list' && selectedBroadcast ? (
         <RoundsList
           broadcastId={selectedBroadcast.tour.id}
           broadcastName={selectedBroadcast.tour.name}
+          broadcast={selectedBroadcast}
           onSelectRound={handleSelectRound}
           onBack={handleBackToList}
           setLoadingRounds={setLoadingRounds}
@@ -170,12 +171,13 @@ export default function App() {
           onOpen={openUrl}
           tournamentName={selectedBroadcast?.tour.name}
           roundSlug={roundSlug}
+          broadcastId={selectedBroadcast?.tour.id}
         />
-      ) : selectedGame ? (
+      ) : viewState === 'game-view' && selectedGame ? (
         <GameView
           game={selectedGame}
           games={games}
-          onBack={handleBackToRounds}
+          onBack={selectedBroadcast ? handleBackToRounds : handleBackFromSavedGameView}
           onGameSelect={handleGameSelectInView}
           onOpen={openUrl}
           tournamentName={selectedBroadcast?.tour.name}

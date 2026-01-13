@@ -19,6 +19,7 @@ export function useTerminalSize(debounceMs: number = 100): TerminalSize {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
+        process.stdout.write('\x1B[2J\x1B[H');
         setSize({
           width: process.stdout.columns || 80,
           height: process.stdout.rows || 24,

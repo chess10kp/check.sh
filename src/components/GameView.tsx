@@ -383,7 +383,7 @@ export default function GameView({
       handleSave();
     } else if (input === "f" && focus === "board") {
       setFlipped((prev) => !prev);
-    } else if (input === "o" && onOpen) {
+    } else if ((input === "o" || input === "O") && onOpen) {
       if (game.id) {
         const url = tournamentName && roundSlug
           ? formatBroadcastGameUrl(tournamentName, roundSlug, game.id)

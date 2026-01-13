@@ -50,7 +50,11 @@ export function useBroadcasts(token?: string) {
   };
 
   useEffect(() => {
-    loadFromCache();
+    const initialize = async () => {
+      await loadFromCache();
+      refresh();
+    };
+    initialize();
   }, []);
 
   return { broadcasts, loading, error, refresh };
