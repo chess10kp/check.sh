@@ -8,7 +8,7 @@ import ScrollView, { truncateText } from './ScrollView.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
 interface SavedGamesViewProps {
-  onSelectGame: (game: Game) => void;
+  onSelectGame: (favorite: FavoriteGame) => void;
   onBack: () => void;
 }
 
@@ -75,7 +75,7 @@ export default function SavedGamesView({ onSelectGame, onBack }: SavedGamesViewP
     } else if (key.return) {
       const favorite = favorites[selectedIndex];
       if (favorite) {
-        onSelectGame(favorite.game);
+        onSelectGame(favorite);
       }
     } else if (input === 'd' || key.delete) {
       handleDelete();

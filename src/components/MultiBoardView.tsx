@@ -17,6 +17,7 @@ interface MultiBoardViewProps {
   onOpen?: (url: string) => void;
   tournamentName?: string;
   roundSlug?: string;
+  roundId?: string;
   broadcastId?: string;
 }
 
@@ -252,6 +253,7 @@ function MultiBoardView({
   onOpen,
   tournamentName,
   roundSlug,
+  roundId,
   broadcastId,
 }: MultiBoardViewProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -354,17 +356,14 @@ function MultiBoardView({
       } else if (key.escape || input === "q") {
         onBack();
       } else if ((input === "o" || input === "O") && onOpen) {
-        const selectedGame = firstRowGames[selectedIndex];
-        if (selectedGame?.id) {
-          const url =
-            tournamentName && roundSlug
-              ? formatBroadcastGameUrl(
-                  tournamentName,
-                  roundSlug,
-                  selectedGame.id
-                )
-              : `https://lichess.org/${selectedGame.id}`;
+        if (tournamentName && roundSlug && roundId) {
+          const url = formatBroadcastGameUrl(tournamentName, roundSlug, roundId);
           onOpen(url);
+        } else {
+          const selectedGame = firstRowGames[selectedIndex];
+          if (selectedGame?.id) {
+            onOpen(`https://lichess.org/${selectedGame.id}`);
+          }
         }
       }
     } else {
@@ -382,17 +381,14 @@ function MultiBoardView({
       } else if (key.escape || input === "q") {
         onBack();
       } else if ((input === "o" || input === "O") && onOpen) {
-        const selectedGame = games[selectedIndex];
-        if (selectedGame?.id) {
-          const url =
-            tournamentName && roundSlug
-              ? formatBroadcastGameUrl(
-                  tournamentName,
-                  roundSlug,
-                  selectedGame.id
-                )
-              : `https://lichess.org/${selectedGame.id}`;
+        if (tournamentName && roundSlug && roundId) {
+          const url = formatBroadcastGameUrl(tournamentName, roundSlug, roundId);
           onOpen(url);
+        } else {
+          const selectedGame = games[selectedIndex];
+          if (selectedGame?.id) {
+            onOpen(`https://lichess.org/${selectedGame.id}`);
+          }
         }
       }
     }
@@ -492,6 +488,7 @@ export default memo(MultiBoardView, (prev, current) => {
     prev.roundName === current.roundName &&
     prev.tournamentName === current.tournamentName &&
     prev.roundSlug === current.roundSlug &&
+    prev.roundId === current.roundId &&
     prev.broadcastId === current.broadcastId
   );
 });

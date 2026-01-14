@@ -11,7 +11,7 @@ function Header({ loading, loadingGames, loadingRounds }: HeaderProps) {
   return (
     <Box borderStyle="single" borderColor="cyan" paddingX={1}>
       <Box flexGrow={1}>
-        <Text bold color="cyan">Check.sh</Text>
+        <Text bold color="cyan">Chesh</Text>
       </Box>
       <Box width={25} height={1}>
         <Text color="yellow" dimColor={!(loading || loadingGames || loadingRounds)}>

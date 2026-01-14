@@ -96,6 +96,9 @@ import type { Game } from '../types/index.js';
 export interface FavoriteGame {
   game: Game;
   savedAt: number;
+  tournamentName?: string;
+  roundSlug?: string;
+  roundId?: string;
 }
 
 export interface FavoritesCache {
@@ -109,13 +112,22 @@ export async function getFavorites(): Promise<FavoritesCache> {
   return cache || { games: [] };
 }
 
-export async function addFavorite(game: Game): Promise<boolean> {
+export async function addFavorite(
+  game: Game,
+  broadcastInfo?: { tournamentName?: string; roundSlug?: string; roundId?: string }
+): Promise<boolean> {
   const favorites = await getFavorites();
   const exists = favorites.games.some(f => f.game.id === game.id);
   if (exists) {
     return false;
   }
-  favorites.games.push({ game, savedAt: Date.now() });
+  favorites.games.push({
+    game,
+    savedAt: Date.now(),
+    tournamentName: broadcastInfo?.tournamentName,
+    roundSlug: broadcastInfo?.roundSlug,
+    roundId: broadcastInfo?.roundId,
+  });
   await setCache(FAVORITES_CACHE_KEY, favorites);
   return true;
 }

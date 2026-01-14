@@ -22,6 +22,7 @@ interface GameViewProps {
   onOpen?: (url: string) => void;
   tournamentName?: string;
   roundSlug?: string;
+  roundId?: string;
 }
 
 // Memoized board container to prevent re-renders when only border color changes
@@ -168,6 +169,7 @@ export default function GameView({
   onOpen,
   tournamentName,
   roundSlug,
+  roundId,
 }: GameViewProps) {
   const [focus, setFocus] = useState<FocusArea>("board");
   const [sidebarSelectedIndex, setSidebarSelectedIndex] = useState(0);
@@ -316,11 +318,11 @@ export default function GameView({
   }, [game.moves, isAnalyzing, analysisMoves.length, analysis.combinedMoves]);
 
   const handleSave = useCallback(() => {
-    addFavorite(game).then((added) => {
+    addFavorite(game, { tournamentName, roundSlug, roundId }).then((added) => {
       setSaveStatus(added ? "saved" : "exists");
       setTimeout(() => setSaveStatus("idle"), 2000);
     });
-  }, [game]);
+  }, [game, tournamentName, roundSlug, roundId]);
 
   useInput((input, key) => {
     const now = Date.now();
@@ -402,11 +404,11 @@ export default function GameView({
     } else if (input === "f" && focus === "board") {
       setFlipped((prev) => !prev);
     } else if ((input === "o" || input === "O") && onOpen) {
-      if (game.id) {
-        const url = tournamentName && roundSlug
-          ? formatBroadcastGameUrl(tournamentName, roundSlug, game.id)
-          : `https://lichess.org/${game.id}`;
+      if (tournamentName && roundSlug && roundId) {
+        const url = formatBroadcastGameUrl(tournamentName, roundSlug, roundId);
         onOpen(url);
+      } else if (game.id) {
+        onOpen(`https://lichess.org/${game.id}`);
       }
     } else if (focus === "sidebar") {
       if (key.upArrow || input === "k") {

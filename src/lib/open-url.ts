@@ -13,10 +13,12 @@ function slugify(text: string): string {
 export function formatBroadcastGameUrl(
   tournamentName: string,
   roundSlug: string,
-  gameId: string
+  roundId: string,
+  gameId?: string
 ): string {
   const tournamentSlug = slugify(tournamentName);
-  return `https://lichess.org/broadcast/${tournamentSlug}/${roundSlug}/${gameId}`;
+  const baseUrl = `https://lichess.org/broadcast/${tournamentSlug}/${roundSlug}/${roundId}`;
+  return gameId ? `${baseUrl}/${gameId}` : baseUrl;
 }
 
 export async function openUrl(url: string): Promise<void> {

@@ -9,7 +9,7 @@ import Header from './components/Header.js';
 import { ViewState, Broadcast, Game } from './types/index.js';
 import { streamRoundPGN } from './lib/lichess-api.js';
 import { parsePGN } from './lib/pgn-parser.js';
-import { getRoundPGNCache, setRoundPGNCache } from './lib/cache.js';
+import { getRoundPGNCache, setRoundPGNCache, FavoriteGame } from './lib/cache.js';
 import { BroadcastRound } from './types/index.js';
 import { openUrl } from './lib/open-url.js';
 
@@ -31,6 +31,7 @@ export default function App() {
   const [games, setGames] = useState<Game[]>([]);
   const [roundName, setRoundName] = useState<string>('');
   const [roundSlug, setRoundSlug] = useState<string>('');
+  const [roundId, setRoundId] = useState<string>('');
 
   const handleBackToList = useCallback(() => {
     setSelectedGame(null);
@@ -51,9 +52,12 @@ export default function App() {
     setViewState('broadcast-list');
   }, []);
 
-  const handleSelectSavedGame = useCallback((game: Game) => {
-    setSelectedGame(game);
-    setGames([game]);
+  const handleSelectSavedGame = useCallback((favorite: FavoriteGame) => {
+    setSelectedGame(favorite.game);
+    setGames([favorite.game]);
+    setRoundSlug(favorite.roundSlug || '');
+    setRoundId(favorite.roundId || '');
+    setSelectedBroadcast(favorite.tournamentName ? { tour: { id: '', name: favorite.tournamentName, url: '', tier: 'low' }, rounds: [] } : null);
     setViewState('game-view');
   }, []);
 
@@ -82,6 +86,7 @@ export default function App() {
     setLoadingGames(true);
     setRoundName(round.name);
     setRoundSlug(round.slug || round.name);
+    setRoundId(round.id);
 
     try {
       let fullPgn = '';
@@ -171,6 +176,7 @@ export default function App() {
           onOpen={openUrl}
           tournamentName={selectedBroadcast?.tour.name}
           roundSlug={roundSlug}
+          roundId={roundId}
           broadcastId={selectedBroadcast?.tour.id}
         />
       ) : viewState === 'game-view' && selectedGame ? (
@@ -182,6 +188,7 @@ export default function App() {
           onOpen={openUrl}
           tournamentName={selectedBroadcast?.tour.name}
           roundSlug={roundSlug}
+          roundId={roundId}
         />
       ) : null}
     </Box>
