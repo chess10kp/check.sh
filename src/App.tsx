@@ -136,7 +136,7 @@ export default function App() {
   };
 
   return (
-    <Box  flexDirection="column">
+    <Box flexDirection="column">
       <Header loading={loading} loadingGames={loadingGames} loadingRounds={loadingRounds} />
 
       {viewState === 'broadcast-list' ? (

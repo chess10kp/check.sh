@@ -1,12 +1,12 @@
 import { useMemo, memo, useRef } from 'react';
 import { Box, Text } from 'ink';
-import { getPieceSymbol, renderPixelArtPiece, PieceSize, PieceColor, PieceType } from '../lib/pieces.js';
+import { getPieceSymbol, renderPixelArtPiece, PieceSize } from '../lib/pieces.js';
 import { rgbToInkColor, defaultTheme } from '../lib/themes.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
 const CELL_WIDTH = 8;
 const PIXEL_ART_CELL_WIDTH = 18;
-const SMALL_CELL_WIDTH = 4;
+const SMALL_CELL_WIDTH = 3;
 
 interface ChessBoardProps {
   fen: string;
@@ -14,8 +14,6 @@ interface ChessBoardProps {
   flipped?: boolean;
   cursorSquare?: string;
   selectedSquare?: string;
-  availableWidth?: number;
-  availableHeight?: number;
 }
 
 interface Square {
@@ -29,47 +27,7 @@ interface CompactSquareProps {
   isLastMove: boolean;
   isCursor: boolean;
   isSelected: boolean;
-  cellWidth?: number;
-  compactPieces?: Record<PieceColor, Record<PieceType, string>>;
 }
-
-const CompactSquare = memo(function CompactSquare({ square, isWhiteSquare, isLastMove, isCursor, isSelected, cellWidth, compactPieces }: CompactSquareProps) {
-  const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
-  const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
-  const symbol = square.piece && compactPieces
-    ? compactPieces[square.piece.color][square.piece.type]
-    : square.piece
-    ? getPieceSymbol(square.piece.color, square.piece.type, 'compact')
-    : '\n       \n        ';
-
-  let effectiveBgColor = bgColor;
-  if (isSelected) {
-    effectiveBgColor = 'blue';
-  } else if (isCursor) {
-    effectiveBgColor = 'cyan';
-  } else if (isLastMove) {
-    effectiveBgColor = defaultTheme.highlight;
-  }
-
-  return (
-    <Box
-      width={cellWidth || CELL_WIDTH}
-      justifyContent="center"
-      backgroundColor={effectiveBgColor}
-    >
-      <Text color={pieceColor}>
-        {symbol}
-      </Text>
-    </Box>
-  );
-}, (prev, next) => {
-  if (prev.isCursor !== next.isCursor) return false;
-  if (prev.isSelected !== next.isSelected) return false;
-  if (prev.isLastMove !== next.isLastMove) return false;
-  if (prev.square.piece?.color !== next.square.piece?.color) return false;
-  if (prev.square.piece?.type !== next.square.piece?.type) return false;
-  return true;
-});
 
 interface SmallSquareProps {
   square: Square;
@@ -78,38 +36,6 @@ interface SmallSquareProps {
   isCursor: boolean;
   isSelected: boolean;
 }
-
-const SmallSquare = memo(function SmallSquare({ square, isWhiteSquare, isLastMove, isCursor, isSelected }: SmallSquareProps) {
-  const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
-  const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
-
-  let content = ' ';
-  if (square.piece) {
-    content = getPieceSymbol(square.piece.color, square.piece.type, 'small');
-  }
-
-  let effectiveBgColor = bgColor;
-  if (isSelected) {
-    effectiveBgColor = 'blue';
-  } else if (isCursor) {
-    effectiveBgColor = 'cyan';
-  } else if (isLastMove) {
-    effectiveBgColor = defaultTheme.highlight;
-  }
-
-  return (
-    <Box width={SMALL_CELL_WIDTH} backgroundColor={effectiveBgColor}>
-      <Text color={pieceColor}>{content}</Text>
-    </Box>
-  );
-}, (prev, next) => {
-  if (prev.isCursor !== next.isCursor) return false;
-  if (prev.isSelected !== next.isSelected) return false;
-  if (prev.isLastMove !== next.isLastMove) return false;
-  if (prev.square.piece?.color !== next.square.piece?.color) return false;
-  if (prev.square.piece?.type !== next.square.piece?.type) return false;
-  return true;
-});
 
 interface PixelArtSquareProps {
   square: Square;
@@ -144,14 +70,80 @@ const PixelArtSquare = memo(function PixelArtSquare({ square, isWhiteSquare, isL
   return true;
 });
 
+const SmallSquare = memo(function SmallSquare({ square, isWhiteSquare, isLastMove, isCursor, isSelected }: SmallSquareProps) {
+  const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
+  const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
+  
+  let content = ' ';
+  if (square.piece) {
+    content = getPieceSymbol(square.piece.color, square.piece.type, 'small');
+  }
+
+  let effectiveBgColor = bgColor;
+  if (isSelected) {
+    effectiveBgColor = 'blue';
+  } else if (isCursor) {
+    effectiveBgColor = 'cyan';
+  } else if (isLastMove) {
+    effectiveBgColor = defaultTheme.highlight;
+  }
+
+  return (
+    <Box width={SMALL_CELL_WIDTH} backgroundColor={effectiveBgColor}>
+      <Text color={pieceColor}>{content}</Text>
+    </Box>
+  );
+}, (prev, next) => {
+  if (prev.isCursor !== next.isCursor) return false;
+  if (prev.isSelected !== next.isSelected) return false;
+  if (prev.isLastMove !== next.isLastMove) return false;
+  if (prev.square.piece?.color !== next.square.piece?.color) return false;
+  if (prev.square.piece?.type !== next.square.piece?.type) return false;
+  return true;
+});
+
+const CompactSquare = memo(function CompactSquare({ square, isWhiteSquare, isLastMove, isCursor, isSelected }: CompactSquareProps) {
+  const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
+  const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
+  const symbol = square.piece
+    ? getPieceSymbol(square.piece.color, square.piece.type, 'compact')
+    : '\n       \n        ';
+
+  let effectiveBgColor = bgColor;
+  if (isSelected) {
+    effectiveBgColor = 'blue';
+  } else if (isCursor) {
+    effectiveBgColor = 'cyan';
+  } else if (isLastMove) {
+    effectiveBgColor = defaultTheme.highlight;
+  }
+
+  return (
+    <Box
+      width={CELL_WIDTH}
+      justifyContent="center"
+      backgroundColor={effectiveBgColor}
+    >
+      <Text color={pieceColor}>
+        {symbol}
+      </Text>
+    </Box>
+  );
+}, (prev, next) => {
+  if (prev.isCursor !== next.isCursor) return false;
+  if (prev.isSelected !== next.isSelected) return false;
+  if (prev.isLastMove !== next.isLastMove) return false;
+  if (prev.square.piece?.color !== next.square.piece?.color) return false;
+  if (prev.square.piece?.type !== next.square.piece?.type) return false;
+  return true;
+});
+
 interface CompactBoardRowProps {
   row: Square[];
   rankIndex: number;
   lastMoveFrom?: string;
   lastMoveTo?: string;
   flipped?: boolean;
-  cellWidth?: number;
-  compactPieces?: Record<PieceColor, Record<PieceType, string>>;
 }
 
 interface CompactBoardRowPropsWithCursor extends CompactBoardRowProps {
@@ -159,7 +151,7 @@ interface CompactBoardRowPropsWithCursor extends CompactBoardRowProps {
   selectedSquare?: string;
 }
 
-const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo, flipped = false, cursorSquare, selectedSquare, cellWidth, compactPieces }: CompactBoardRowPropsWithCursor) {
+const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo, flipped = false, cursorSquare, selectedSquare }: CompactBoardRowPropsWithCursor) {
   const rank = flipped ? rankIndex + 1 : 8 - rankIndex;
   return (
     <Box flexDirection="row">
@@ -181,8 +173,6 @@ const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMove
             isLastMove={isLastMove}
             isCursor={isCursor}
             isSelected={isSelected}
-            cellWidth={cellWidth}
-            compactPieces={compactPieces}
           />
         );
       })}
@@ -192,16 +182,14 @@ const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMove
   if (prev.rankIndex !== next.rankIndex) return false;
   if (prev.cursorSquare !== next.cursorSquare) return false;
   if (prev.selectedSquare !== next.selectedSquare) return false;
-  if (prev.cellWidth !== next.cellWidth) return false;
-  if (prev.compactPieces !== next.compactPieces) return false;
-
+  
   const rank = String(8 - prev.rankIndex);
   const prevAffectsRank = prev.lastMoveFrom?.[1] === rank || prev.lastMoveTo?.[1] === rank;
   const nextAffectsRank = next.lastMoveFrom?.[1] === rank || next.lastMoveTo?.[1] === rank;
-
+  
   if (prevAffectsRank !== nextAffectsRank) return false;
   if (nextAffectsRank && (prev.lastMoveFrom !== next.lastMoveFrom || prev.lastMoveTo !== next.lastMoveTo)) return false;
-
+  
   return prev.row.every((s, i) => {
     const ns = next.row[i];
     return s.piece?.color === ns?.piece?.color && s.piece?.type === ns?.piece?.type;
@@ -371,7 +359,7 @@ const PixelArtBoard = memo(function PixelArtBoard({ squares, lastMove, flipped =
   );
 });
 
-function ChessBoard({ fen, lastMove, flipped = false, cursorSquare, selectedSquare, availableWidth, availableHeight }: ChessBoardProps) {
+function ChessBoard({ fen, lastMove, flipped = false, cursorSquare, selectedSquare }: ChessBoardProps) {
   const { width: terminalWidth, height: terminalHeight } = useTerminalSize(150);
 
   const pieceSize = useMemo((): PieceSize => {
@@ -495,75 +483,6 @@ function ChessBoard({ fen, lastMove, flipped = false, cursorSquare, selectedSqua
   const lastMoveFrom = lastMove?.from;
   const lastMoveTo = lastMove?.to;
 
-  // Calculate cell dimensions to fit within available space without overflow
-  const { compactCellWidth, compactCellHeight } = useMemo(() => {
-    const baseCellWidth = 8;
-    const baseCellHeight = 3;
-    // Minimum dimensions based on compact piece sizes (3 lines tall, 8 chars wide)
-    const minCellWidth = 8;
-    const minCellHeight = 3;
-    const rankLabelWidth = 2;
-    const fileLabelHeight = 1;
-    const numSquares = 8;
-    
-    // Calculate cell dimensions from available space
-    let cellWidth = baseCellWidth;
-    let cellHeight = baseCellHeight;
-    
-    if (availableWidth) {
-      const availableForSquares = availableWidth - rankLabelWidth;
-      cellWidth = Math.floor(availableForSquares / numSquares);
-    }
-    
-    if (availableHeight) {
-      const availableForRanks = availableHeight - fileLabelHeight;
-      cellHeight = Math.floor(availableForRanks / numSquares);
-    }
-    
-    // Terminal chars are ~2:1 aspect ratio (width:height in pixels)
-    // Constrain so squares appear roughly square visually
-    const widthFromHeight = cellHeight * 2;
-    const heightFromWidth = Math.floor(cellWidth / 2);
-    
-    // Take the minimum to ensure we fit in both dimensions
-    const constrainedWidth = Math.min(cellWidth, widthFromHeight);
-    const constrainedHeight = Math.min(cellHeight, heightFromWidth);
-    
-    // Apply minimum bounds based on compact piece dimensions
-    const finalWidth = Math.max(minCellWidth, constrainedWidth);
-    const finalHeight = Math.max(minCellHeight, constrainedHeight);
-    
-    return { compactCellWidth: finalWidth, compactCellHeight: finalHeight };
-  }, [availableWidth, availableHeight]);
-
-  const scaledCompactPieces = useMemo(() => {
-    const padTop = Math.max(0, Math.floor((compactCellHeight - 3) / 2));
-    const padBottom = compactCellHeight - 3 - padTop;
-
-    const createPadding = (count: number): string => {
-      if (count <= 0) return '';
-      return '\n' + Array(count).fill(' '.repeat(compactCellWidth)).join('\n');
-    };
-
-    const scalePiece = (piece: string): string => {
-      if (padTop === 0 && padBottom === 0) return piece;
-      return createPadding(padTop) + piece + createPadding(padBottom);
-    };
-
-    const result: Record<PieceColor, Record<PieceType, string>> = {
-      white: {} as any,
-      black: {} as any,
-    };
-
-    for (const color of ['white', 'black'] as PieceColor[]) {
-      for (const type of ['king', 'queen', 'rook', 'bishop', 'knight', 'pawn'] as PieceType[]) {
-        result[color][type] = scalePiece(getPieceSymbol(color, type, 'compact'));
-      }
-    }
-
-    return result;
-  }, [compactCellHeight, compactCellWidth]);
-
   return (
     <Box flexDirection="column">
       {displaySquares.map((row, rankIndex) => {
@@ -578,15 +497,13 @@ function ChessBoard({ fen, lastMove, flipped = false, cursorSquare, selectedSqua
             flipped={flipped}
             cursorSquare={cursorSquare}
             selectedSquare={selectedSquare}
-            cellWidth={compactCellWidth}
-            compactPieces={scaledCompactPieces}
           />
         );
       })}
       <Box flexDirection="row">
         <Box width={1} />
         {fileLabels.split('').map((file, i) => (
-          <Box key={`${file}-${i}`} width={compactCellWidth || CELL_WIDTH} justifyContent="center">
+          <Box key={`${file}-${i}`} width={CELL_WIDTH} justifyContent="center">
             <Text color="gray">{file}</Text>
           </Box>
         ))}
@@ -647,7 +564,5 @@ export default memo(ChessBoard, (prev, next) => {
   if (prev.flipped !== next.flipped) return false;
   if (prev.cursorSquare !== next.cursorSquare) return false;
   if (prev.selectedSquare !== next.selectedSquare) return false;
-  if (prev.availableWidth !== next.availableWidth) return false;
-  if (prev.availableHeight !== next.availableHeight) return false;
   return true;
 });

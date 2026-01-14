@@ -294,25 +294,22 @@ function MultiBoardView({
     );
   }, [terminalWidth, useMultiBoardLayout]);
 
-  const containerHeight = useMemo(() => {
-    const APP_HEADER_HEIGHT = 4;
-    return terminalHeight - APP_HEADER_HEIGHT;
-  }, [terminalHeight]);
-
   const scrollViewHeight = useMemo(() => {
+    const APP_HEADER_HEIGHT = 4;
     const LOCAL_HEADER_HEIGHT = 1;
     const SUBHEADER_HEIGHT = 2;
     const PADDING = 2;
     const HELPBAR_HEIGHT = 1;
     return Math.max(
       5,
-      containerHeight -
+      terminalHeight -
+        APP_HEADER_HEIGHT -
         LOCAL_HEADER_HEIGHT -
         SUBHEADER_HEIGHT -
         PADDING -
         HELPBAR_HEIGHT
     );
-  }, [containerHeight]);
+  }, [terminalHeight]);
 
   const firstRowGames = useMemo(() => {
     if (!useMultiBoardLayout) return [];
@@ -405,23 +402,21 @@ function MultiBoardView({
 
   if (games.length === 0) {
     return (
-      <Box flexDirection="column" height={containerHeight} padding={1}>
-        <Box flexDirection="column" flexGrow={1}>
-          <Text bold color={defaultTheme.accent}>
-            {roundName}
-          </Text>
-          <Box padding={1}>
-            <Text color="yellow">No games found in PGN</Text>
-          </Box>
-          <Text color="gray">Press q to return to rounds</Text>
+      <Box flexDirection="column" height="100%" padding={1}>
+        <Text bold color={defaultTheme.accent}>
+          {roundName}
+        </Text>
+        <Box padding={1}>
+          <Text color="yellow">No games found in PGN</Text>
         </Box>
+        <Text color="gray">Press q to return to rounds</Text>
         <HelpBar shortcuts="[q/Esc] Back" />
       </Box>
     );
   }
 
   return (
-    <Box flexDirection="column" height={containerHeight} padding={1}>
+    <Box flexDirection="column" height="100%" padding={1}>
       <Box flexDirection="column" flexGrow={1}>
         <Text bold color={defaultTheme.accent}>
           {roundName}

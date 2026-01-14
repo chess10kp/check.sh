@@ -34,8 +34,6 @@ const BoardContainer = memo(
     isAnalyzing,
     cursorSquare,
     selectedSquare,
-    availableWidth,
-    availableHeight,
   }: {
     focus: FocusArea;
     currentFEN: string | undefined;
@@ -44,8 +42,6 @@ const BoardContainer = memo(
     isAnalyzing: boolean;
     cursorSquare?: string;
     selectedSquare?: string;
-    availableWidth?: number;
-    availableHeight?: number;
   }) {
     return (
       <Box
@@ -61,14 +57,12 @@ const BoardContainer = memo(
           </Box>
         )}
         {currentFEN && (
-          <ChessBoard
-            fen={currentFEN}
-            lastMove={lastMove}
+          <ChessBoard 
+            fen={currentFEN} 
+            lastMove={lastMove} 
             flipped={flipped}
             cursorSquare={isAnalyzing ? cursorSquare : undefined}
             selectedSquare={isAnalyzing ? selectedSquare : undefined}
-            availableWidth={availableWidth}
-            availableHeight={availableHeight}
           />
         )}
       </Box>
@@ -85,8 +79,6 @@ const BoardContainer = memo(
     if (prev.isAnalyzing !== next.isAnalyzing) return false;
     if (prev.cursorSquare !== next.cursorSquare) return false;
     if (prev.selectedSquare !== next.selectedSquare) return false;
-    if (prev.availableWidth !== next.availableWidth) return false;
-    if (prev.availableHeight !== next.availableHeight) return false;
     return true;
   }
 );
@@ -195,54 +187,6 @@ export default function GameView({
     );
   }, [terminalWidth, terminalHeight]);
 
-  // Calculate available space for the chess board
-  const boardDimensions = useMemo(() => {
-    if (isCompactMode) {
-      // Compact mode layout:
-      // - Root padding: 2
-      // - paddingX on board container: 4
-      // - Rank labels: 2
-      const COMPACT_OVERHEAD_WIDTH = 8;
-      // - Root padding height: 2
-      // - Player info (top + bottom): 2
-      // - Analysis header: 1
-      // - File labels: 1
-      const COMPACT_OVERHEAD_HEIGHT = 6;
-      
-      return {
-        availableWidth: terminalWidth - COMPACT_OVERHEAD_WIDTH,
-        availableHeight: terminalHeight - COMPACT_OVERHEAD_HEIGHT,
-      };
-    }
-    
-    // Full mode layout widths:
-    // - GameListSidebar: 45 + 2 (border) = 47
-    // - RightPanelContainer: 45
-    // - BoardContainer: marginX={1}*2=2 + paddingX={2}*2=4 + border=2 = 8
-    // - Root padding: 2
-    const LEFT_SIDEBAR_WIDTH = 47;
-    const RIGHT_PANEL_WIDTH = 45;
-    const BOARD_CONTAINER_OVERHEAD = 8;
-    const ROOT_PADDING = 2;
-    
-    const availableWidth = terminalWidth - LEFT_SIDEBAR_WIDTH - RIGHT_PANEL_WIDTH - BOARD_CONTAINER_OVERHEAD - ROOT_PADDING;
-    
-    // Layout heights:
-    // - Root padding: 2 (top + bottom)
-    // - HelpBar: 2 (spacer + text line)
-    // - Board border: 2
-    // - Analysis mode header: 2 (if shown)
-    // - File labels row: 1
-    const ROOT_PADDING_HEIGHT = 2;
-    const HELPBAR_HEIGHT = 2;
-    const BOARD_BORDER_HEIGHT = 2;
-    const FILE_LABELS_HEIGHT = 1;
-    
-    const availableHeight = terminalHeight - ROOT_PADDING_HEIGHT - HELPBAR_HEIGHT - BOARD_BORDER_HEIGHT - FILE_LABELS_HEIGHT;
-    
-    return { availableWidth, availableHeight };
-  }, [terminalWidth, terminalHeight, isCompactMode]);
-
   const viewedGameIndex = useMemo(
     () => games.findIndex((g) => g.id === game.id),
     [games, game.id]
@@ -289,7 +233,7 @@ export default function GameView({
   // Memoize the shortcuts text to prevent HelpBar re-renders
   const boardShortcuts = useMemo(() => {
     if (isAnalyzing) {
-      return `[Arrows/hjkl] Move cursor | [Enter] Select | [n/p] Nav | [f] Flip | [Esc] Exit analysis`;
+      return `[Arrows] Move cursor | [Enter] Select | [n/p] Nav | [f] Flip | [Esc] Exit analysis`;
     }
     return `[a] Analyze | [n/→] Next | [p/←] Prev | [f] Flip | [s] Save | [o] Open | [Tab] Sidebar | [q] Return${
       saveStatus === "saved"
@@ -383,20 +327,20 @@ export default function GameView({
         return;
       }
 
-      // Cursor movement with arrow keys or hjkl
-      if (key.upArrow || input === 'k') {
+      // Cursor movement with arrow keys
+      if (key.upArrow) {
         analysis.moveCursor('up');
         return;
       }
-      if (key.downArrow || input === 'j') {
+      if (key.downArrow) {
         analysis.moveCursor('down');
         return;
       }
-      if (key.leftArrow || input === 'h') {
+      if (key.leftArrow) {
         analysis.moveCursor('left');
         return;
       }
-      if (key.rightArrow || input === 'l') {
+      if (key.rightArrow) {
         analysis.moveCursor('right');
         return;
       }
@@ -493,8 +437,6 @@ export default function GameView({
                   flipped={flipped}
                   cursorSquare={analysis.state.isAnalyzing ? analysis.state.cursorSquare : undefined}
                   selectedSquare={analysis.state.isAnalyzing ? analysis.state.selectedSquare ?? undefined : undefined}
-                  availableWidth={boardDimensions.availableWidth}
-                  availableHeight={boardDimensions.availableHeight}
                 />
               )}
             </Box>
@@ -523,8 +465,6 @@ export default function GameView({
               isAnalyzing={analysis.state.isAnalyzing}
               cursorSquare={analysis.state.isAnalyzing ? analysis.state.cursorSquare : undefined}
               selectedSquare={analysis.state.isAnalyzing ? analysis.state.selectedSquare ?? undefined : undefined}
-              availableWidth={boardDimensions.availableWidth}
-              availableHeight={boardDimensions.availableHeight}
             />
 
             <RightPanelContainer
