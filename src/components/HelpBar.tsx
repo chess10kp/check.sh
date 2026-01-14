@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Box, Text, Spacer } from 'ink';
+import { Box, Text } from 'ink';
 
 interface HelpBarProps {
   shortcuts: string;
@@ -41,8 +41,7 @@ function HelpBar({ shortcuts }: HelpBarProps) {
   const parsedShortcuts = parseShortcuts(shortcuts);
 
   return (
-    <>
-      <Spacer />
+    <Box flexDirection="column" flexGrow={1} justifyContent="flex-end">
       <Box justifyContent="space-between">
         <Box paddingX={2}>
           {parsedShortcuts.map((part, index) => (
@@ -52,7 +51,7 @@ function HelpBar({ shortcuts }: HelpBarProps) {
           ))}
         </Box>
       </Box>
-    </>
+    </Box>
   );
 }
 

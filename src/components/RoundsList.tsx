@@ -37,14 +37,18 @@ export default function RoundsList({
   const [standingsScrollTop, setStandingsScrollTop] = useState(0);
   const { height: terminalHeight, width: terminalWidth } = useTerminalSize(150);
 
-  const scrollViewHeight = useMemo(() => {
+  const containerHeight = useMemo(() => {
     const APP_HEADER_HEIGHT = 4;
+    return terminalHeight - APP_HEADER_HEIGHT;
+  }, [terminalHeight]);
+
+  const scrollViewHeight = useMemo(() => {
     const LOCAL_HEADER_HEIGHT = 1;
     const SUBHEADER_HEIGHT = 2;
     const PADDING = 2;
     const HELPBAR_HEIGHT = 1;
-    return Math.max(5, terminalHeight - APP_HEADER_HEIGHT - LOCAL_HEADER_HEIGHT - SUBHEADER_HEIGHT - PADDING - HELPBAR_HEIGHT);
-  }, [terminalHeight]);
+    return Math.max(5, containerHeight - LOCAL_HEADER_HEIGHT - SUBHEADER_HEIGHT - PADDING - HELPBAR_HEIGHT);
+  }, [containerHeight]);
 
   const leaderboardHeight = useMemo(() => {
     return Math.max(3, scrollViewHeight - 4);
@@ -174,7 +178,7 @@ export default function RoundsList({
   }
 
   return (
-    <Box flexDirection="column" height="100%" padding={1}>
+    <Box flexDirection="column" height={containerHeight} padding={1}>
       <Box flexDirection="column" flexGrow={1}>
         <Text bold color={defaultTheme.accent}>
           {broadcastName}

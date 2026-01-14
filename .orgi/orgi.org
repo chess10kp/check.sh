@@ -1,0 +1,16 @@
+* DONE flip
+  :PROPERTIES:
+  :ID: task-20260111233314
+  :TITLE: flip
+  :CREATED: <2026-01-11 Sun 23:33>
+  :END:
+
+  board
+
+* DONE Add keybind 'o' to open current tournament/round/game in Lichess
+  :PROPERTIES:
+  :ID: task-20260112003833
+  :TITLE: Add keybind 'o' to open current tournament/round/game in Lichess
+  :CREATED: <2026-01-12 Mon 00:38>
+  :END:
+

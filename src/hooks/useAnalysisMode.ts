@@ -166,12 +166,12 @@ export function useAnalysisMode({
   }, []);
 
   const exitAnalysis = useCallback(() => {
-    // Reset to original game state
+    // Reset to the move where analysis started
     setState(prev => ({
       ...prev,
       isAnalyzing: false,
       selectedSquare: null,
-      currentMoveIndex: initialMoveIndex,
+      currentMoveIndex: prev.analysisStartIndex >= 0 ? prev.analysisStartIndex : initialMoveIndex,
       analysisMoves: [],
       analysisStartIndex: -1,
     }));
