@@ -187,6 +187,14 @@ export default function GameView({
     );
   }, [terminalWidth, terminalHeight]);
 
+  // Hide sidebar when terminal is too narrow for full layout
+  // Full layout needs: sidebar (45) + board (~75 for medium) + right panel (45) = ~165
+  // Without sidebar: board (~75) + right panel (45) = ~120
+  const showSidebar = useMemo(() => {
+    const MIN_WIDTH_WITH_SIDEBAR = 165;
+    return terminalWidth >= MIN_WIDTH_WITH_SIDEBAR;
+  }, [terminalWidth]);
+
   const viewedGameIndex = useMemo(
     () => games.findIndex((g) => g.id === game.id),
     [games, game.id]
@@ -235,14 +243,15 @@ export default function GameView({
     if (isAnalyzing) {
       return `[Arrows] Move cursor | [Enter] Select | [n/p] Nav | [f] Flip | [Esc] Exit analysis`;
     }
-    return `[a] Analyze | [n/→] Next | [p/←] Prev | [f] Flip | [s] Save | [o] Open | [Tab] Sidebar | [q] Return${
+    const tabHint = showSidebar ? " | [Tab] Sidebar" : "";
+    return `[a] Analyze | [n/→] Next | [p/←] Prev | [f] Flip | [s] Save | [o] Open${tabHint} | [q] Return${
       saveStatus === "saved"
         ? " ✓ Saved!"
         : saveStatus === "exists"
         ? " (already saved)"
         : ""
     }`;
-  }, [saveStatus, isAnalyzing]);
+  }, [saveStatus, isAnalyzing, showSidebar]);
 
   const sidebarShortcuts =
     "[↑/k] Up | [↓/j] Down | [Enter] Select | [Tab] Board | [q] Return";
@@ -385,7 +394,7 @@ export default function GameView({
       if (focus === "board" && canGoPrevious) {
         analysis.prevMove();
       }
-    } else if (key.tab) {
+    } else if (key.tab && showSidebar) {
       setFocus((prev) => (prev === "board" ? "sidebar" : "board"));
     } else if (input === "s" && focus === "board") {
       handleSave();
@@ -450,12 +459,14 @@ export default function GameView({
           </Box>
         ) : (
           <Box flexDirection="row">
-            <GameListSidebar
-              games={games}
-              selectedIndex={sidebarSelectedIndex}
-              viewedGameIndex={viewedGameIndex}
-              hasFocus={focus === "sidebar"}
-            />
+            {showSidebar && (
+              <GameListSidebar
+                games={games}
+                selectedIndex={sidebarSelectedIndex}
+                viewedGameIndex={viewedGameIndex}
+                hasFocus={focus === "sidebar"}
+              />
+            )}
 
             <BoardContainer
               focus={focus}
